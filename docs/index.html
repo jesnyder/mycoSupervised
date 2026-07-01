@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>astroPharmReactor</title>
-
-  <!-- Plotly -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <title>mycoSupervised — About</title>
 
   <!-- Tabulator (simple light theme) -->
   <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6/dist/css/tabulator_simple.min.css" rel="stylesheet" />
@@ -16,81 +13,65 @@
 </head>
 <body>
 
+<!-- ══════════ SIDEBAR (cross-page navigation) ══════════ -->
+<aside class="sidenav">
+  <div class="sidenav-title">mycoSupervised</div>
+  <a href="index.html" class="active">About</a>
+  <a href="study001_pilot.html">Study 001 — Pilot</a>
+</aside>
+
+<div class="page-wrap">
+
 <!-- ══════════ HEADER ══════════ -->
 <header>
-  <h1>astroPharmReactor</h1>
+  <h1>mycoSupervised</h1>
   <p class="subtitle">
-    Arduino-based bioreactor environmental monitoring system for pharmaceutical microbiology research.
-    Continuous multi-sensor logging of <em>E. coli</em> cultures with pump and stepper motor control.
+    Arduino-based environmental monitoring system for observing fungal growth through a substrate.
+    Continuous multi-sensor logging of a liquid fungal culture inoculated into a sterile substrate bag.
   </p>
-  <p class="date">Last updated: 2026-06-26</p>
+  <p class="date">Last updated: 2026-06-30</p>
 </header>
 
 <nav>
-  <a href="#studies">Studies</a>
   <a href="#objective">Objective</a>
   <a href="#hardware">Hardware</a>
   <a href="#software">Software</a>
-  <a href="#viz">Data Visualization</a>
   <a href="#future">Future Work</a>
   <a href="#physics">Physics</a>
-  <a href="#literature">Literature</a>
 </nav>
 
 <main>
-
-  <!-- ══════════ STUDY SUMMARIES ══════════ -->
-  <section id="studies">
-    <h2>Study Summaries</h2>
-    <p>
-      Generated from raw Arduino CSV files by
-      <code>user_provided/makefile/build.sh</code>.
-      Each study shows its full logging timeline, bad-data duration per sensor,
-      and a sortable / downloadable variable-stats table.
-    </p>
-    <div id="studies-container">
-      <div id="studies-empty">
-        No study data loaded. Run <code>bash user_provided/makefile/build.sh</code> to generate.
-      </div>
-    </div>
-  </section>
 
   <!-- ══════════ OBJECTIVE ══════════ -->
   <section id="objective">
     <h2>Objective</h2>
     <p>
-      Design and characterise an affordable, extensible bioreactor monitoring platform for
-      pharmaceutical-grade microbial culture research. The system logs temperature, relative humidity,
-      atmospheric pressure, volatile organic compounds (VOC proxy via gas resistance), and spectral
-      light intensity at 1&nbsp;Hz, streaming data from an Arduino over serial to a host PC.
-      The longer-term mission — informed by the Literature section below — is to demonstrate a
-      monitoring architecture applicable to <strong>distributed and off-planet biomanufacturing</strong>:
-      small, low-power reactors capable of producing biologics at a point-of-care or aboard a
-      spacecraft, where traditional pharmaceutical supply chains are unavailable.
+      Design and characterise an affordable, extensible environmental monitoring platform for
+      observing fungal growth through a solid substrate. The system logs temperature, relative
+      humidity, atmospheric pressure, volatile organic compounds (VOC proxy via gas resistance), and
+      spectral light intensity every 3&nbsp;seconds, streaming data from an Arduino over serial to a host PC.
+      The goal is to find sensor-based proxies for substrate colonization — using ambient-vs-in-bag
+      differentials in temperature, humidity, and gas resistance as indicators of fungal metabolic
+      activity, and light transmission through the bag as an indicator of mycelial density.
     </p>
     <p>
-      Three studies with <em>E. coli</em> have been run. Study&nbsp;001 established baseline
-      performance of the SHT30 + BME688&nbsp;#1 stack over 12&nbsp;sessions (~111&nbsp;h logged).
-      Study&nbsp;002 added a second BME688 positioned at the bioreactor exhaust outlet and the AS7341
-      spectral sensor in its final sessions, running 9&nbsp;sessions (~23&nbsp;h logged).
-      Study&nbsp;003 continues with the full sensor stack (SHT30, dual BME688, AS7341), logging
-      6&nbsp;sessions (~6&nbsp;h logged) as of 2026-06-26.
-      <strong>This sensor placement is critical to interpretation</strong>: SHT30 and BME688&nbsp;#1
-      measure bench-ambient conditions, while BME688&nbsp;#2 samples exhaust gas — thermally and
-      chemically closer to the culture headspace.
+      Study&nbsp;001 (pilot) began 2026-06-30. A liquid culture of fungus was inoculated into a bag of
+      sterile substrate and outfitted with sensors the same day at 5:00pm.
+      <strong>Sensor placement is critical to interpretation</strong>: SHT30 and BME688&nbsp;#1 sit
+      outside the bag, on the table next to it, and measure ambient room conditions. BME688&nbsp;#2
+      sits inside the bag, in direct contact with the substrate headspace. The AS7341 light sensor
+      sits under the bag, illuminated from above by a light strong enough to saturate the sensor
+      (1000 across all channels) if the bag were not attenuating it — so light transmitted through
+      the bag, not absolute brightness, is the signal of interest.
     </p>
     <p>
-      The work is directed toward a peer-reviewed journal article on small-scale pharmaceutical
-      bioreactors. Platform code, raw data, and this analysis dashboard are version-controlled
-      in this repository.
+      Platform code, raw data, and this analysis dashboard are version-controlled in this repository.
     </p>
     <div class="card-grid">
-      <div class="card"><div class="label">Model organism</div><div class="value">E. coli</div></div>
-      <div class="card"><div class="label">Pilot studies</div><div class="value">3</div></div>
-      <div class="card"><div class="label">Study&nbsp;001 logged</div><div class="value">~111 h, 12 sessions</div></div>
-      <div class="card"><div class="label">Study&nbsp;002 logged</div><div class="value">~23 h, 9 sessions</div></div>
-      <div class="card"><div class="label">Study&nbsp;003 logged</div><div class="value">~6 h, 6 sessions</div></div>
-      <div class="card"><div class="label">Logging interval</div><div class="value">1 second</div></div>
+      <div class="card"><div class="label">Subject</div><div class="value">Fungal substrate colonization</div></div>
+      <div class="card"><div class="label">Pilot studies</div><div class="value">1</div></div>
+      <div class="card"><div class="label">Study&nbsp;001 started</div><div class="value">2026-06-30 17:00</div></div>
+      <div class="card"><div class="label">Logging interval</div><div class="value">3 seconds</div></div>
       <div class="card"><div class="label">Sensors on I²C</div><div class="value">4 types</div></div>
       <div class="card"><div class="label">CSV columns</div><div class="value">24 (22 Arduino + 2 PC)</div></div>
       <div class="card"><div class="label">Status</div><div class="value">Active</div></div>
@@ -109,44 +90,45 @@
       BME688&nbsp;#2 has SDO pulled to 3.3&nbsp;V → address 0x77.
     </p>
 
-    <h3>Study 002 sensor placement — key interpretation context</h3>
+    <h3>Study 001 sensor placement — key interpretation context</h3>
     <p>
-      Sensor position is fixed across study&nbsp;002 and directly affects how every chart should be
+      Sensor position is fixed for study&nbsp;001 and directly affects how every chart should be
       read. This placement must be documented here because it is not encoded in the CSV data:
     </p>
     <div class="card-grid">
       <div class="card">
         <div class="label" style="color:var(--blue)">■ SHT30 (0x44)</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
-          On bench adjacent to bioreactor. Measures <strong>ambient room temperature and relative humidity</strong>.
+          On the table, outside the bag. Measures <strong>ambient room temperature and relative humidity</strong>.
           Capacitive polymer RH element; accuracy ±0.2&nbsp;°C, ±2&nbsp;%&nbsp;RH (typ.).
-          Not in the culture headspace.
+          Not in contact with the substrate.
         </div>
       </div>
       <div class="card">
         <div class="label" style="color:var(--green)">■ BME688 #1 (0x76)</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
-          On bench adjacent to bioreactor. Measures ambient T, RH, P, and <strong>background lab VOCs</strong>.
-          Provides environmental baseline and drift reference for BME688&nbsp;#2.
-          MOX sensor requires 1–3&nbsp;h burn-in per session.
+          On the table, outside the bag, next to SHT30. Measures ambient T, RH, P, and
+          <strong>background lab VOCs</strong>. Provides an environmental baseline and drift
+          reference for BME688&nbsp;#2. MOX sensor requires 1–3&nbsp;h burn-in per session.
         </div>
       </div>
       <div class="card">
         <div class="label" style="color:var(--orange)">■ BME688 #2 (0x77)</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
-          Positioned at the <strong>bioreactor exhaust outlet</strong>. Temperature ≈ headspace temperature.
-          Humidity ≈ exhaust saturation (expect near 100&nbsp;%&nbsp;RH). Gas resistance tracks
-          culture-derived VOCs (acetate, ethanol, acetoin from overflow metabolism).
-          This is the metabolically informative sensor.
+          Positioned <strong>inside the substrate bag</strong>, in the headspace above the substrate.
+          Temperature and humidity reflect in-bag microclimate, not room conditions. Gas resistance
+          tracks VOCs building up in the enclosed headspace, potentially including fungal metabolic
+          off-gassing. This is the sensor most directly exposed to the fungal culture.
         </div>
       </div>
       <div class="card">
         <div class="label" style="color:var(--purple)">■ AS7341 (0x39)</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
           DFRobot Gravity module. Eight narrowband channels F1–F8 (415–680&nbsp;nm) + CLEAR + NIR.
-          Added in the final two sessions of study&nbsp;002 — very few data points exist.
-          Intended as an OD₆₀₀ proxy and pigment indicator; requires opaque vessel enclosure
-          to eliminate ambient light contamination.
+          Positioned under the bag, beneath a light source strong enough to saturate the sensor if
+          unobstructed. Intended as a mycelial-colonization proxy: as the fungus colonizes the
+          substrate and the bag interior fills with white mycelium, transmitted light reaching the
+          sensor is expected to fall.
         </div>
       </div>
     </div>
@@ -172,6 +154,29 @@
       </div>
       <div id="actuators-table"></div>
     </div>
+
+    <h3>Wiring</h3>
+    <p>
+      All four sensors share a single I²C bus (Arduino <code>SDA</code>/<code>SCL</code> — pins
+      <code>A4</code>/<code>A5</code> on an Uno-class board). SHT30 and the AS7341 have fixed I²C
+      addresses; the two BME688 sensors are otherwise identical modules distinguished only by the
+      state of their SDO (address-select) pin — SDO tied to GND gives address <code>0x76</code>
+      (BME688&nbsp;#1), SDO tied to VCC gives <code>0x77</code> (BME688&nbsp;#2). The pump and
+      stepper are driven directly by digital/PWM output pins and are not on the I²C bus.
+    </p>
+    <div class="tbl-wrapper">
+      <div class="tbl-controls">
+        <button class="btn" onclick="wiringTable.download('csv','wiring.csv')">
+          <svg viewBox="0 0 16 16"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.97a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg>
+          Download CSV
+        </button>
+      </div>
+      <div id="wiring-table"></div>
+    </div>
+    <p style="font-size:.82rem;color:var(--text-dim);margin-top:6px">
+      Source: <code>user_provided/arduino/01_stepper_motor/addresses.txt</code> and the pin
+      definitions in <code>01_stepper_motor.ino</code>.
+    </p>
   </section>
 
   <!-- ══════════ SOFTWARE ══════════ -->
@@ -181,9 +186,10 @@
     <h3>Arduino Firmware</h3>
     <p>
       <code>user_provided/arduino/01_stepper_motor/01_stepper_motor.ino</code> — C/C++. Reads all
-      sensors once per second, streams 22 comma-separated fields over serial at 115,200&nbsp;baud,
-      and manages peristaltic pump duty-cycle (10&nbsp;min ON / 1&nbsp;min OFF by default) and
-      stepper motor speed. No RTC — uptime is <code>millis()</code> since boot.
+      sensors every 3&nbsp;seconds, streams 22 comma-separated fields over serial at
+      115,200&nbsp;baud, and manages peristaltic pump duty-cycle (0&nbsp;min ON / 1000&nbsp;min OFF
+      by default — effectively disabled for Study 001) and stepper motor speed. No RTC — uptime is
+      <code>millis()</code> since boot.
     </p>
     <p><strong>Required Arduino libraries:</strong></p>
     <span class="chip">Wire (built-in)</span>
@@ -204,8 +210,6 @@
       root, then <code>studies/STUDY_NAME/</code>. Set <code>STUDY_NAME</code> and
       <code>SERIAL_PORT</code> at the top of the active script before each session.
       On Linux the port is typically <code>/dev/ttyUSB0</code>; on Windows <code>COM3</code>/<code>COM4</code>.
-      Git remote is over SSH (<code>git@github.com:jesnyder/astroPharmReactor.git</code>) —
-      HTTPS credential-manager is not installed on the Fedora host.
     </p>
     <div class="tbl-wrapper">
       <div class="tbl-controls">
@@ -223,10 +227,10 @@
       Run via <code>bash user_provided/makefile/build.sh</code> which also opens the site.
       Key internal design decisions for future reference:
     </p>
-    <p><strong>Schema normalisation:</strong> Five historical CSV versions (A–E) exist across the two
-      studies as sensors were added incrementally. A <code>COL_ALIASES</code> dict in the script maps
-      every legacy column name to a canonical name (e.g., <code>temp_C</code> → <code>sht30_temp_C</code>).
-      All versions are processed identically after normalisation.
+    <p><strong>Schema normalisation:</strong> Five historical CSV versions (A–E) exist from the prior
+      project on this rig, as sensors were added incrementally. A <code>COL_ALIASES</code> dict in the
+      script maps every legacy column name to a canonical name (e.g., <code>temp_C</code> →
+      <code>sht30_temp_C</code>). All versions are processed identically after normalisation.
     </p>
     <p><strong>Bad-data filtering</strong> applies three classifications — <code>nan</code>,
       <code>below_min</code>, <code>above_max</code> — using per-column limits in
@@ -239,7 +243,7 @@
       null-row separator so Plotly does not draw a connecting line across the gap.
     </p>
     <p><strong>description.txt:</strong> Place a plain-text file at
-      <code>studies/study00X_ecoli/description.txt</code> — it is read by
+      <code>studies/study00X_pilot/description.txt</code> — it is read by
       <code>read_description()</code> and shown verbatim at the top of the study block on the site.
     </p>
     <p><strong>Auto-interpretation:</strong> <code>generate_interpretation()</code> classifies
@@ -248,10 +252,10 @@
       gas resistance level and fractional variation, and bad-data fraction, producing a
       <code>temp_pressure_text</code> string and a list of <code>bullets</code> rendered below each study.
     </p>
-    <p>Each generated <code>docs/js/study00X_ecoli.js</code> populates two globals:</p>
+    <p>Each generated <code>docs/js/study00X_pilot.js</code> populates two globals:</p>
     <pre>
 // Per-study statistics and auto-interpretation
-window.STUDY_SUMMARIES["study002_ecoli"] = {
+window.STUDY_SUMMARIES["study001_pilot"] = {
   study, generated,
   description,            // text from description.txt (null if absent)
   interpretation: {
@@ -273,15 +277,15 @@ window.STUDY_SUMMARIES["study002_ecoli"] = {
 };
 
 // Per-study downsampled time-series chart data (~4 000 points per study)
-window.STUDY_CHARTS["study002_ecoli"] = {
+window.STUDY_CHARTS["study001_pilot"] = {
   original_rows, sampled_rows,
-  x: ["2026-06-10 19:19:19", ...],   // shared ISO timestamps for all traces
+  x: ["2026-06-30 17:11:32", ...],   // shared ISO timestamps for all traces
   groups: {
     temperature: { title, unit, traces: [{ name, color, y: [21.3, null, 22.1, ...] }] },
     humidity:    { ... },   // null = bad data or inter-session gap (Plotly line break)
     pressure:    { ... },
     gas:         { ... },
-    light:       { ... }   // only present in study002 (and sparse — ~6 valid points)
+    light:       { ... }
   }
 };</pre>
     <p>
@@ -291,44 +295,30 @@ window.STUDY_CHARTS["study002_ecoli"] = {
       <span style="color:#cf222e;font-weight:600">■ BME688 #2 #cf222e</span>
     </p>
 
-    <h3>Web Dashboard — chart inventory</h3>
+    <h3>Web Dashboard</h3>
     <p>
-      <code>docs/index.html</code> is a fully static single-page site. No server required.
-      All Plotly charts show a mode bar (zoom / pan / box-select / download PNG) on hover.
-      All charts are single-column, full-width. Chart heights: dual-axis 432&nbsp;px,
-      per-group time-series 374&nbsp;px, scatter 560&nbsp;×&nbsp;560&nbsp;px (square, centered).
+      This site is a fully static multi-page dashboard. No server required. This page
+      (<code>docs/index.html</code>) is the About/reference page — platform objective, hardware,
+      software, and sensor physics. Per-study data, description, and analysis (timeline, variable
+      stats, time-series charts, interpretation) live on their own dedicated page, reachable from the
+      sidebar on the left — see <a href="study001_pilot.html">Study 001 — Pilot</a>.
     </p>
-    <p>Per-study block rendering order:</p>
-    <ol style="padding-left:22px;font-size:.92rem;line-height:1.9">
-      <li><strong>Description</strong> — text from <code>description.txt</code> (blue left-border card)</li>
-      <li><strong>Summary cards</strong> — wall-clock hours, logged hours, sessions, sensors, rows</li>
-      <li><strong>Session timeline</strong> — Gantt bar chart; height scales with session count</li>
-      <li><strong>Bad-data duration</strong> — horizontal bar chart showing filtered-data hours per column</li>
-      <li><strong>Variable statistics table</strong> — Tabulator: min / max / range / mean / bad rows per column</li>
-      <li><strong>Dual-axis temp + pressure</strong> — °C left axis (solid), hPa right axis (dotted); followed by auto-generated physical interpretation text and per-chart sensor notes</li>
-      <li><strong>Per-group time-series</strong> — one chart each for temperature, humidity, pressure, gas resistance, light; each followed by per-chart sensor context notes (<code>studyGroupNotes()</code>)</li>
-      <li><strong>Sensor cross-correlation scatter</strong> — all unique sensor pairs per group; 560&nbsp;×&nbsp;560&nbsp;px, shared x/y axis range, 1:1 dashed reference line</li>
-      <li><strong>Results interpretation bullets</strong> — auto-generated from Python statistics</li>
-      <li><strong>Downsampled CSV download + Tabulator preview</strong> — 10 rows/page, paginated</li>
-    </ol>
     <p>Libraries loaded from CDN:</p>
     <div class="card-grid" style="margin-bottom:18px">
       <div class="card">
         <div class="label">Plotly.js</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
-          All interactive charts. Light theme: <code>paper_bgcolor:'#ffffff'</code>,
-          <code>plot_bgcolor:'#f6f8fa'</code>. Global <code>CFG</code>:
-          <code>{ responsive:true, displayModeBar:true, displaylogo:false }</code>.
-          Scatter plots use <code>responsive:false</code> to hold the fixed square geometry.
+          Used on the per-study analysis pages for all interactive charts. Light theme:
+          <code>paper_bgcolor:'#ffffff'</code>, <code>plot_bgcolor:'#f6f8fa'</code>.
         </div>
       </div>
       <div class="card">
         <div class="label">Tabulator v6</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
-          Hardware manifest tables (sensors, actuators, logger scripts),
-          per-study variable statistics, and downsampled time-series preview.
-          Theme: <code>tabulator_simple.min.css</code> (light).
-          All tables export to CSV via Download button.
+          Hardware manifest tables (sensors, wiring, actuators, logger scripts) on this page, and
+          per-study variable statistics / time-series preview tables on the study pages.
+          Theme: <code>tabulator_simple.min.css</code> (light). All tables export to CSV via
+          Download button.
         </div>
       </div>
     </div>
@@ -346,79 +336,10 @@ python logging_sht30_bme688_bme688_as7341.py
 #    → CSVs written to  studies/STUDY_NAME/REACTOR_SHT30_BME688_AS7341_YYYYMMDD_HHMM.csv
 
 # 5. Optionally add an experiment description
-echo "E. coli batch culture, 37 C, LB medium, 200 rpm" > studies/STUDY_NAME/description.txt
+echo "Liquid fungal culture inoculated into a bag of sterile substrate" > studies/STUDY_NAME/description.txt
 
 # 6. Rebuild site (runs Python pipeline and opens index.html)
-bash user_provided/makefile/build.sh
-
-# 7. Push — must use SSH (HTTPS credential-manager not on Fedora host)
-git push   # remote already set to git@github.com:jesnyder/astroPharmReactor.git</pre>
-  </section>
-
-  <!-- ══════════ DATA VISUALIZATION ══════════ -->
-  <section id="viz">
-    <h2>Data Visualization</h2>
-    <p>
-      Drop a reactor CSV log file below to plot all sensor channels. The parser skips the warm-up
-      row where SHT30 reads −45 °C (sensor not yet ready).
-    </p>
-
-    <!-- Drop zone -->
-    <div class="drop-zone" id="drop-zone">
-      <div class="drop-icon">📂</div>
-      <p>Drag &amp; drop a <code>REACTOR_*.csv</code> file here,<br>
-         or <span onclick="document.getElementById('file-input').click()">browse to select</span>.</p>
-      <input type="file" id="file-input" accept=".csv" />
-    </div>
-
-    <!-- Status bar -->
-    <div class="status-bar" id="status-bar">
-      <div class="status-dot"></div>
-      <span id="status-text"></span>
-      <button class="btn clear-btn" onclick="clearData()">Clear</button>
-    </div>
-
-    <!-- Charts -->
-    <div class="chart-grid" id="chart-grid">
-
-      <div class="chart-box">
-        <div id="chart-temp" class="placeholder-msg">Load a CSV to see Temperature</div>
-      </div>
-
-      <div class="chart-box">
-        <div id="chart-humidity" class="placeholder-msg">Load a CSV to see Humidity</div>
-      </div>
-
-      <div class="chart-box">
-        <div id="chart-pressure" class="placeholder-msg">Load a CSV to see Pressure</div>
-      </div>
-
-      <div class="chart-box">
-        <div id="chart-gas" class="placeholder-msg">Load a CSV to see Gas Resistance</div>
-      </div>
-
-      <div class="chart-box chart-full">
-        <div id="chart-light" class="placeholder-msg">Load a CSV to see Light Spectrum (AS7341)</div>
-      </div>
-
-      <div class="chart-box chart-full">
-        <div id="chart-pump" class="placeholder-msg">Load a CSV to see Pump State</div>
-      </div>
-
-    </div>
-
-    <!-- Raw data table -->
-    <h3>Raw Data Table</h3>
-    <div class="tbl-wrapper">
-      <div class="tbl-controls">
-        <button class="btn" id="raw-download-btn" onclick="rawTable && rawTable.download('csv','reactor_data.csv')" disabled>
-          <svg viewBox="0 0 16 16"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.97a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg>
-          Download CSV
-        </button>
-        <span id="raw-count" style="color:var(--text-dim);font-size:.85rem;"></span>
-      </div>
-      <div id="raw-table"></div>
-    </div>
+bash user_provided/makefile/build.sh</pre>
   </section>
 
   <!-- ══════════ FUTURE WORK ══════════ -->
@@ -428,7 +349,7 @@ git push   # remote already set to git@github.com:jesnyder/astroPharmReactor.git
     <div class="future-item">
       <strong>Data analysis pipeline</strong><br>
       Build Python scripts or Jupyter notebooks to visualize and analyze logged CSV data —
-      temperature trends, gas resistance as a culture-growth proxy, spectral changes over time.
+      temperature trends, gas resistance as a colonization proxy, light-transmission changes over time.
     </div>
 
     <div class="future-item">
@@ -438,21 +359,22 @@ git push   # remote already set to git@github.com:jesnyder/astroPharmReactor.git
     </div>
 
     <div class="future-item">
-      <strong>Closed-loop control</strong><br>
-      Use sensor feedback (temperature, humidity, gas resistance) to drive actuator decisions —
-      e.g., adjust pump duty cycle or stepper speed in response to culture state.
+      <strong>Photo log correlation</strong><br>
+      Pair periodic photos of the substrate bag with sensor timestamps so visible colonization
+      progress can be cross-checked against the light-transmission and gas-resistance proxies.
     </div>
 
     <div class="future-item">
-      <strong>Additional organisms and media</strong><br>
-      Extend studies beyond E. coli to other microorganisms or culture conditions. The modular
-      sensor stack makes it straightforward to add optical density (OD600) or pH sensing.
+      <strong>Additional species and substrates</strong><br>
+      Extend studies beyond this pilot species/substrate combination to other fungal species or
+      substrate recipes. The modular sensor stack makes it straightforward to instrument multiple
+      bags in parallel for comparison.
     </div>
 
     <div class="future-item">
       <strong>Live web dashboard</strong><br>
-      Serve live sensor data via a local web interface so the reactor can be monitored remotely
-      without SSH access to the logging PC.
+      Serve live sensor data via a local web interface so the substrate bag can be monitored
+      remotely without SSH access to the logging PC.
     </div>
 
     <div class="future-item">
@@ -464,7 +386,7 @@ git push   # remote already set to git@github.com:jesnyder/astroPharmReactor.git
 
   <!-- ══════════ PHYSICS ══════════ -->
   <section id="physics">
-    <h2>Sensor Physics &amp; Bioreactor Thermodynamics</h2>
+    <h2>Sensor Physics &amp; Substrate Bag Thermodynamics</h2>
     <p>The sensors used in this system measure variables that are physically coupled through well-established relationships. Understanding these relationships is essential for separating true biological signals from sensor artefacts, environmental drift, and placement effects.</p>
 
     <h3>1 &nbsp;Ideal Gas Law — Temperature–Pressure Coupling</h3>
@@ -472,7 +394,7 @@ git push   # remote already set to git@github.com:jesnyder/astroPharmReactor.git
     <pre>PV = nRT          [SI units: Pa, m³, mol, J·mol⁻¹·K⁻¹]
 
 Constant n, V:    P₁/T₁ = P₂/T₂   →   dP/dT = P/T ≈ 3.4 hPa/K at STP</pre>
-    <p>This reactor operates as an <strong>open vessel</strong> (gas exchange with atmosphere). For an open system at constant P<sub>atm</sub>, temperature and pressure are <em>decoupled</em>: culture heating does not drive pressure changes. Any apparent T–P correlation in the data reflects either meteorological pressure variation or BME688 temperature-compensation artefact — not culture physiology.</p>
+    <p>The substrate bag is not a sealed rigid vessel, so temperature and pressure inside it are not tightly coupled the way the ideal-gas relation above would predict for a closed system: any flexing or venting of the bag lets internal pressure track the surrounding atmosphere. Any apparent T–P correlation between BME688&nbsp;#1 (outside) and BME688&nbsp;#2 (inside) most likely reflects meteorological pressure variation or a BME688 temperature-compensation artefact, not fungal activity — pressure is a poor proxy for what is happening inside the bag.</p>
 
     <h3>2 &nbsp;Saturation Vapour Pressure — Antoine Equation</h3>
     <p>The saturation vapour pressure of water P* as a function of temperature T:</p>
@@ -482,16 +404,16 @@ Antoine constants for water (1–100 °C; NIST Webbook):
   A = 8.07131,  B = 1730.63,  C = 233.426
 
 Key values:
-  P*(22 °C) ≈  26.4 hPa   (typical lab ambient)
-  P*(37 °C) ≈  62.8 hPa   (E. coli culture temperature)
-  Ratio: 2.38 — exhaust air can carry 2.4× more water vapour
+  P*(22 °C) ≈ 26.4 hPa   (typical ambient room temperature)
+  P*(30 °C) ≈ 42.4 hPa   (representative in-bag temperature)
+  Ratio: 1.6 — a warmer bag interior can hold ~60% more water vapour before saturating
 
 Clausius-Clapeyron slope (liquid–vapour equilibrium):
   dP*/dT = Lᵥ · P* / (Rᵥ · T²)
   Lᵥ = 2.501 × 10⁶ J/kg  (latent heat of vaporisation)
   Rᵥ = 461.5 J/(kg·K)    (specific gas constant for water)
   At T = 300 K: dP*/dT ≈ 1.8 hPa/°C</pre>
-    <p>This means the BME688 #2 sensor positioned at the bioreactor outlet (37 °C exhaust) should read substantially higher relative humidity than bench sensors at ambient temperature — even before biological off-gassing. Humidity readings approaching 100 % at the outlet indicate condensation, not accurate RH measurement.</p>
+    <p>This means BME688&nbsp;#2, sealed inside the substrate bag with a moist substrate, is expected to read substantially higher relative humidity than the bench sensors outside — this is normal for an enclosed, moist microclimate and does not by itself indicate fungal activity. Humidity readings at or near 100&nbsp;% RH may reflect condensation on the sensor element rather than an accurate reading.</p>
 
     <h3>3 &nbsp;BME688 Metal-Oxide Gas Sensor — Response Model</h3>
     <p>The BME688 uses a heated metal-oxide (MOX) sensing layer whose resistance changes in the presence of reducing gases:</p>
@@ -506,195 +428,24 @@ Parameters:
 
 Sensitivity: dR/d[C] = −α · R₀ · [C]⁻⁽ᵅ⁺¹⁾   (compresses at high [C])
 
-Key E. coli metabolites detected (all reduce R):
-  • Acetic acid (CH₃COOH, pKₐ = 4.76) — overflow metabolism product
-  • Ethanol (C₂H₅OH) — mixed acid fermentation by-product
-  • Acetoin (C₄H₈O₂) — quorum-sensing signalling molecule
+Fungal metabolism is a known source of reducing VOCs (e.g. ethanol and other
+alcohols, aldehydes) — the specific compound mix depends heavily on species and
+growth stage and is not characterised for this study. The sensor's response is a
+non-selective aggregate signal, not a speciated measurement.
 
-CO₂ is NOT detected by n-type MOX sensors (fully oxidised; no electron donation).</pre>
-    <p>The sensor is non-selective: R integrates the response to all reducing gases simultaneously. Discrimination between metabolites requires temperature cycling or multi-sensor arrays (e-nose approach). Burn-in time of 1–3 h per session is required before R₀ stabilises.</p>
-
-    <h3>4 &nbsp;E. coli Growth — Monod Kinetics</h3>
-    <p>Biomass accumulation in a batch culture under substrate limitation follows Monod kinetics:</p>
-    <pre>dX/dt = (μ(S) − D) · X
-
-Monod equation:
-  μ(S) = μ_max · S / (Kₛ + S)
-
-Parameters for E. coli (aerobic, 37 °C, glucose):
-  μ_max  ≈ 0.7–1.0 h⁻¹
-  Kₛ     ≈ 0.02 g·L⁻¹  (glucose half-saturation constant)
-  D      = dilution rate (= 0 for batch culture)
-
-Overflow metabolism threshold:
-  At μ > μ_crit ≈ 0.35 h⁻¹, acetate is excreted regardless of O₂ availability.
-  Acetate excretion rate: qₐ ∝ (μ − μ_crit) · X
-
-Implication: exponential-phase cultures operating above μ_crit will produce
-  increasing acetate → decreasing BME688 gas resistance at the outlet.</pre>
-
-    <h3>5 &nbsp;Metabolic Heat &amp; VOC Production</h3>
-    <pre>Aerobic respiration (complete):
-  C₆H₁₂O₆ + 6 O₂  →  6 CO₂ + 6 H₂O      ΔG° = −2870 kJ/mol
-
-Overflow metabolism (acetate excretion):
-  C₆H₁₂O₆  →  2 CH₃COOH + 2 CO₂          (anaerobic-like even under aerobic conditions)
-
-Calorimetric heat correlation (Minkevich &amp; Eroshin, 1973):
-  Q_bio ≈ 518 kJ per mol O₂ consumed
-
-Respiratory quotient:
-  RQ = mol CO₂ produced / mol O₂ consumed
-  RQ = 1.0 (pure aerobic on glucose);  RQ &gt; 1 indicates overflow metabolism
-
-Practical link to sensor data:
-  Rising cell density (OD₆₀₀ proxy: AS7341 counts ↓)
-  ↓
-  Rising metabolic activity → acetate accumulation in headspace
-  ↓
-  BME688 #2 resistance decreases (reducing VOC signal)
-  ↓
-  Outlet humidity rises (more evaporation, CO₂ stripping of dissolved water)</pre>
-
-    <h3>6 &nbsp;Henry's Law — Dissolved CO₂ and pH</h3>
-    <pre>Henry's Law (gas dissolution):
-  p_CO₂ = Kₕ · [CO₂]_aq
-
-  Kₕ(25 °C) ≈ 29.4 L·atm/mol  (CO₂, direct form)
-
-CO₂ dissolution drives culture acidification:
-  CO₂ + H₂O  ⇌  H₂CO₃  ⇌  H⁺ + HCO₃⁻     pKₐ₁ = 6.35
-
-Agitation effect: mechanical mixing strips dissolved CO₂, shifting equilibrium
-toward gas phase and partially buffering pH drop. In this open reactor, the
-peristaltic pump provides limited gas exchange — adequate for small-volume cultures
-but insufficient to maintain DO for high-density fermentation.</pre>
-  </section>
-
-  <!-- ══════════ LITERATURE ══════════ -->
-  <section id="literature">
-    <h2>Literature</h2>
-    <p>Selected peer-reviewed publications relevant to small-scale bioreactor design, pharmaceutical bioprocessing, space biomanufacturing, and sensor monitoring for microbial fermentation. Compiled to support preparation of an original journal article from this work.</p>
-
-    <h3>Space Biomanufacturing &amp; Off-Planet Bioreactors</h3>
-    <ol class="lit-list">
-      <li>
-        Adam, B., Zimm-Barnes, C., Khodadad, C., Ricco, A. J., &amp; Bhattacharya, S. (2020).
-        <strong>Growth of microorganisms in an interfacially driven space bioreactor analog.</strong>
-        <em>npj Microgravity</em>, 6, 13.
-        <a href="https://doi.org/10.1038/s41526-020-0101-4" target="_blank" rel="noopener">DOI: 10.1038/s41526-020-0101-4</a>
-        <span class="lit-note">Thin-film rotating-wall bioreactor demonstration; demonstrates viable microbial culture in spaceflight-relevant hardware constraints.</span>
-      </li>
-      <li>
-        Soundararajan, M., Rinehart, C., Freitas, S., Bhattacharya, S., Ricco, A. J., &amp; Leys, N. (2023).
-        <strong>Theoretical design of a space bioprocessing system to produce recombinant proteins for in-space pharmaceutical manufacturing.</strong>
-        <em>npj Microgravity</em>, 9, 78.
-        <a href="https://doi.org/10.1038/s41526-023-00324-w" target="_blank" rel="noopener">DOI: 10.1038/s41526-023-00324-w</a>
-        <span class="lit-note">End-to-end process design for in-space protein production; addresses mass, volume, and power constraints relevant to this work's miniaturisation goal.</span>
-      </li>
-      <li>
-        Santomartino, R., Cockell, C. S., &amp; collaborators. (2023).
-        <strong>Toward sustainable space exploration: a roadmap for harnessing the power of microorganisms.</strong>
-        <em>Nature Communications</em>, 14, 1391.
-        <a href="https://doi.org/10.1038/s41467-023-37070-2" target="_blank" rel="noopener">DOI: 10.1038/s41467-023-37070-2</a>
-        <span class="lit-note">Roadmap article covering ISRU (in-situ resource utilisation), life support, and pharmaceutical production using microorganisms in space — directly frames the broader mission for this project.</span>
-      </li>
-      <li>
-        Benoit, M. R., Conley, C. A., Bhattacharya, S., Steel, J., Laval, C., &amp; Walter, N. (2006).
-        <strong>Microbial antibiotic production aboard the International Space Station.</strong>
-        <em>Applied Microbiology and Biotechnology</em>, 70(4), 403–411.
-        <a href="https://doi.org/10.1007/s00253-005-0098-3" target="_blank" rel="noopener">DOI: 10.1007/s00253-005-0098-3</a>
-        <span class="lit-note">Pioneering ISS microgravity fermentation experiment; demonstrates antibiotic biosynthesis is preserved in microgravity and provides a precedent for pharmaceutical manufacturing in orbit.</span>
-      </li>
-    </ol>
-
-    <h3>Miniaturised &amp; Point-of-Care Bioreactors</h3>
-    <ol class="lit-list" start="5">
-      <li>
-        Saridis, G., Luc, F., Le Bihan, O., &amp; Vigneron, P. (2025).
-        <strong>Advances in miniaturized bioreactors: bridging biotechnology and tissue engineering.</strong>
-        <em>Biotechnology Journal</em>, 20, e70065.
-        <a href="https://doi.org/10.1002/biot.70065" target="_blank" rel="noopener">DOI: 10.1002/biot.70065</a>
-        <span class="lit-note">Recent review of micro- and miniscale bioreactor engineering including sensor integration strategies (DO, pH, optical density) most relevant to upgrading this sensor stack.</span>
-      </li>
-      <li>
-        Perez-Pinera, P., Han, N., Cleto, S., Cao, J., Purcell, O., Shah, K. A., &amp; Lu, T. K. (2016).
-        <strong>Synthetic biology and microbioreactor platforms for programmable production of biologics at the point-of-care.</strong>
-        <em>Nature Communications</em>, 7, 12211.
-        <a href="https://doi.org/10.1038/ncomms12211" target="_blank" rel="noopener">DOI: 10.1038/ncomms12211</a>
-        <span class="lit-note">Microbioreactor (milliliter-scale) coupled with synthetic gene circuits for distributed pharmaceutical production; directly relevant to the pharmaceutical mission of this reactor.</span>
-      </li>
-      <li>
-        Pardee, K., Green, A. A., Takahashi, M. K., Braff, D., Lambert, G., &amp; Collins, J. J. (2016).
-        <strong>Portable, on-demand biomolecular manufacturing.</strong>
-        <em>Cell</em>, 167(1), 248–259.
-        <a href="https://doi.org/10.1016/j.cell.2016.09.013" target="_blank" rel="noopener">DOI: 10.1016/j.cell.2016.09.013</a>
-        <span class="lit-note">Cell-free, freeze-dried bioproduction system that can be rehydrated anywhere; represents the extreme end of distributed pharmaceutical manufacturing that small bioreactors like this could enable.</span>
-      </li>
-      <li>
-        Algorri, J. F., Rolando Alvarez-Bautista, A., Crispin-Alvarado, A., &amp; collaborators. (2022).
-        <strong>Re-envisioning pharmaceutical manufacturing: increasing agility for global patient access.</strong>
-        <em>Journal of Pharmaceutical Sciences</em>, 111(3), 593–607.
-        <a href="https://doi.org/10.1016/j.xphs.2021.08.032" target="_blank" rel="noopener">DOI: 10.1016/j.xphs.2021.08.032</a>
-        <span class="lit-note">Policy and technical roadmap for decentralised pharmaceutical manufacturing; argues that small, flexible bioreactor platforms are essential for pandemic preparedness and remote healthcare.</span>
-      </li>
-    </ol>
-
-    <h3>Sensor Monitoring &amp; VOC Detection in Fermentation</h3>
-    <ol class="lit-list" start="9">
-      <li>
-        Wang, G., Haringa, C., Noorman, H., Chu, J., &amp; Zhuang, Y. (2020).
-        <strong>Development of novel bioreactor control systems based on smart sensors and actuators.</strong>
-        <em>Frontiers in Bioengineering and Biotechnology</em>, 8, 7.
-        <a href="https://doi.org/10.3389/fbioe.2020.00007" target="_blank" rel="noopener">DOI: 10.3389/fbioe.2020.00007</a>
-        <span class="lit-note">Review of smart-sensor integration for closed-loop bioreactor control; covers soft sensors, data-driven models, and the roadmap to fully autonomous fermentation — the direction for the next phase of this work.</span>
-      </li>
-      <li>
-        Wöllner, M., Bur, C., Vogt, A., Reimann, P., &amp; Schütze, A. (2023).
-        <strong>Thermo-cyclically operated metal oxide gas sensor arrays for fermentation monitoring — Part I: sensor signal analysis.</strong>
-        <em>Sensors and Actuators B: Chemical</em>.
-        <a href="https://www.sciencedirect.com/science/article/pii/S2214180423000107" target="_blank" rel="noopener">ScienceDirect: S2214180423000107</a>
-        <span class="lit-note">Directly applicable to this system: demonstrates that temperature-cycled BME-type MOX sensors can discriminate individual fermentation VOCs (ethanol, acetate, acetoin) using pattern recognition — the sensor array approach that would upgrade this reactor's gas measurement from a scalar R to a speciated VOC profile.</span>
-      </li>
-    </ol>
+CO₂ is NOT detected by n-type MOX sensors (fully oxidised; no electron donation),
+so respiration-driven CO₂ buildup in the bag headspace is invisible to this sensor.</pre>
+    <p>The sensor is non-selective: R integrates the response to all reducing gases simultaneously and cannot on its own distinguish a fungal VOC from ambient lab solvents or cleaning agents. Discrimination between sources would require temperature cycling or multi-sensor arrays (e-nose approach). Burn-in time of 1–3 h per session is required before R₀ stabilises — early-session gas readings should be treated cautiously.</p>
   </section>
 
 </main>
 
-<footer>astroPharmReactor &mdash; Last updated 2026-06-26</footer>
+<footer>mycoSupervised &mdash; Last updated 2026-06-30</footer>
 
-<!-- ══════════ STUDY DATA (generated by build.sh) ══════════ -->
-<script src="js/study001_ecoli.js" onerror="console.warn('study001_ecoli.js not found — run build.sh')"></script>
-<script src="js/study002_ecoli.js" onerror="console.warn('study002_ecoli.js not found — run build.sh')"></script>
-<script src="js/study003_ecoli.js" onerror="console.warn('study003_ecoli.js not found — run build.sh')"></script>
-<script src="js/weather.js"        onerror="console.warn('weather.js not found')"></script>
+</div><!-- /.page-wrap -->
 
 <!-- ══════════ SCRIPTS ══════════ -->
 <script>
-// ─── Shared Plotly layout base (light theme) ─────────────────────────────────
-const PLY = {
-  paper_bgcolor: '#ffffff',
-  plot_bgcolor:  '#f6f8fa',
-  font:   { color: '#1f2328', family: 'Segoe UI, Arial, sans-serif', size: 12 },
-  margin: { t: 40, r: 16, b: 56, l: 68 },
-  xaxis:  { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' },
-  yaxis:  { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' },
-  legend: { bgcolor: '#f6f8fa', bordercolor: '#d0d7de', borderwidth: 1 },
-  hovermode: 'x unified',
-};
-
-function layout(title, yLabel) {
-  return Object.assign({}, PLY, {
-    title: { text: title, font: { color: '#1f2328', size: 14 } },
-    yaxis: Object.assign({}, PLY.yaxis, {
-      title: { text: yLabel, font: { color: '#636c76' } },
-    }),
-    height: 540,
-  });
-}
-
-const CFG = { responsive: true, displayModeBar: true, displaylogo: false };
-
 // ─── Tabulator: Sensors ───────────────────────────────────────────────────────
 const sensorsTable = new Tabulator('#sensors-table', {
   layout: 'fitColumns',
@@ -717,8 +468,8 @@ const actuatorsTable = new Tabulator('#actuators-table', {
   layout: 'fitColumns',
   headerSort: true,
   data: [
-    { actuator: 'Peristaltic Pump', pins: 'PWM Pin 5',              notes: '10 min ON / 1 min OFF duty cycle (configurable)' },
-    { actuator: 'Stepper Motor',    pins: 'Step: Pin 2, Dir: Pin 3', notes: 'Culture mixing / agitation' },
+    { actuator: 'Peristaltic Pump', pins: 'PWM Pin 5',              notes: 'Wired but idle for Study 001 — passive substrate, no liquid feed' },
+    { actuator: 'Stepper Motor',    pins: 'Step: Pin 2, Dir: Pin 3', notes: 'Wired but idle for Study 001 — solid substrate, no agitation' },
   ],
   columns: [
     { title: 'Actuator', field: 'actuator', headerSort: true, widthGrow: 1 },
@@ -727,14 +478,36 @@ const actuatorsTable = new Tabulator('#actuators-table', {
   ],
 });
 
+// ─── Tabulator: Wiring ────────────────────────────────────────────────────────
+const wiringTable = new Tabulator('#wiring-table', {
+  layout: 'fitColumns',
+  headerSort: true,
+  data: [
+    { line: 'SDA (I²C data)', from: 'Arduino A4 / SDA', to: 'Shared bus — SHT30, BME688 #1, BME688 #2, AS7341' },
+    { line: 'SCL (I²C clock)', from: 'Arduino A5 / SCL', to: 'Shared bus — SHT30, BME688 #1, BME688 #2, AS7341' },
+    { line: 'SDO (address select)', from: 'BME688 #1', to: 'GND → address 0x76' },
+    { line: 'SDO (address select)', from: 'BME688 #2', to: 'VCC (3.3V) → address 0x77' },
+    { line: 'VCC', from: 'Arduino 3.3V/5V (module dependent)', to: 'All four I²C sensors' },
+    { line: 'GND', from: 'Arduino GND', to: 'All four I²C sensors, shared ground' },
+    { line: 'Pump PWM', from: 'Arduino Pin 5', to: 'Peristaltic pump driver' },
+    { line: 'Stepper STEP', from: 'Arduino Pin 2', to: 'Stepper motor driver' },
+    { line: 'Stepper DIR', from: 'Arduino Pin 3', to: 'Stepper motor driver' },
+  ],
+  columns: [
+    { title: 'Line',  field: 'line', headerSort: true, widthGrow: 1 },
+    { title: 'From',  field: 'from', headerSort: false, widthGrow: 2 },
+    { title: 'To / Notes', field: 'to', headerSort: false, widthGrow: 2 },
+  ],
+});
+
 // ─── Tabulator: Loggers ───────────────────────────────────────────────────────
 const loggersTable = new Tabulator('#loggers-table', {
   layout: 'fitColumns',
   headerSort: true,
   data: [
-    { script: 'logging_sht30.py',                           sensors: 'SHT30 + BME688',              used: 'Study 001' },
-    { script: 'logging_sht30_bme688_bme688.py',             sensors: 'SHT30 + 2× BME688',           used: 'Study 002 early runs' },
-    { script: 'logging_sht30_bme688_bme688_as7341.py',      sensors: 'SHT30 + 2× BME688 + AS7341',  used: 'Study 002–003, current' },
+    { script: 'logging_sht30.py',                           sensors: 'SHT30 + BME688',              used: '(historical, prior project)' },
+    { script: 'logging_sht30_bme688_bme688.py',             sensors: 'SHT30 + 2× BME688',           used: '(historical, prior project)' },
+    { script: 'logging_sht30_bme688_bme688_as7341.py',      sensors: 'SHT30 + 2× BME688 + AS7341',  used: 'Study 001, current' },
   ],
   columns: [
     { title: 'Script',         field: 'script',  headerSort: true,  widthGrow: 2, formatter: cell => `<code style="color:#0550ae">${cell.getValue()}</code>` },
@@ -743,1102 +516,6 @@ const loggersTable = new Tabulator('#loggers-table', {
   ],
 });
 
-// ─── Raw data Tabulator (created on CSV load) ────────────────────────────────
-let rawTable = null;
-
-const RAW_COLUMNS = [
-  { title: 'PC Timestamp',   field: 'pc_timestamp',       widthGrow: 2, headerSort: true },
-  { title: 'Elapsed (s)',    field: 'elapsed_s',           width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'Uptime (s)',     field: 'uptime_s',            width: 100,  headerSort: true, sorter: 'number' },
-  { title: 'SHT30 T (°C)',   field: 'sht30_temp_C',        width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'SHT30 RH (%)',   field: 'sht30_humidity_pct',  width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'BME1 T (°C)',    field: 'bme688_1_temp_C',     width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'BME1 RH (%)',    field: 'bme688_1_humidity_pct', width: 110, headerSort: true, sorter: 'number' },
-  { title: 'BME1 P (hPa)',   field: 'bme688_1_pressure_hpa', width: 110, headerSort: true, sorter: 'number' },
-  { title: 'BME1 Gas (Ω)',   field: 'bme688_1_gas_ohms',   width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'BME2 T (°C)',    field: 'bme688_2_temp_C',     width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'BME2 RH (%)',    field: 'bme688_2_humidity_pct', width: 110, headerSort: true, sorter: 'number' },
-  { title: 'BME2 P (hPa)',   field: 'bme688_2_pressure_hpa', width: 110, headerSort: true, sorter: 'number' },
-  { title: 'BME2 Gas (Ω)',   field: 'bme688_2_gas_ohms',   width: 110,  headerSort: true, sorter: 'number' },
-  { title: 'F1 Blue',        field: 'as7341_f1',            width: 90,  headerSort: true, sorter: 'number' },
-  { title: 'F2 Cyan',        field: 'as7341_f2',            width: 90,  headerSort: true, sorter: 'number' },
-  { title: 'F3 Green',       field: 'as7341_f3',            width: 90,  headerSort: true, sorter: 'number' },
-  { title: 'F4 Yellow',      field: 'as7341_f4',            width: 90,  headerSort: true, sorter: 'number' },
-  { title: 'CLEAR',          field: 'as7341_clear',         width: 90,  headerSort: true, sorter: 'number' },
-  { title: 'NIR',            field: 'as7341_nir',           width: 80,  headerSort: true, sorter: 'number' },
-  { title: 'Pump',           field: 'pump_state',           width: 80,  headerSort: true },
-];
-
-// ─── CSV Parsing ──────────────────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = lines[i].split(',');
-    if (vals.length !== headers.length) continue;
-    const row = {};
-    headers.forEach((h, j) => { row[h] = vals[j].trim(); });
-    // skip warm-up row (SHT30 reads -45 before ready)
-    if (parseFloat(row.sht30_temp_C) < -40) continue;
-    rows.push(row);
-  }
-  return rows;
-}
-
-// ─── Plotting ─────────────────────────────────────────────────────────────────
-function plotData(rows) {
-  const x = rows.map(r => r.pc_timestamp);
-  const n = f => rows.map(r => { const v = parseFloat(r[f]); return isNaN(v) ? null : v; });
-
-  const line = (name, color) => ({ mode: 'lines', line: { color, width: 1.5 } });
-
-  // Temperature
-  Plotly.newPlot('chart-temp', [
-    { name: 'SHT30',     x, y: n('sht30_temp_C'),     ...line('SHT30',     '#0969da') },
-    { name: 'BME688 #1', x, y: n('bme688_1_temp_C'),  ...line('BME688 #1', '#1a7f37') },
-    { name: 'BME688 #2', x, y: n('bme688_2_temp_C'),  ...line('BME688 #2', '#cf222e') },
-  ], layout('Temperature', '°C'), CFG);
-
-  // Humidity
-  Plotly.newPlot('chart-humidity', [
-    { name: 'SHT30',     x, y: n('sht30_humidity_pct'),     ...line('SHT30',     '#0969da') },
-    { name: 'BME688 #1', x, y: n('bme688_1_humidity_pct'),  ...line('BME688 #1', '#1a7f37') },
-    { name: 'BME688 #2', x, y: n('bme688_2_humidity_pct'),  ...line('BME688 #2', '#cf222e') },
-  ], layout('Humidity', '% RH'), CFG);
-
-  // Pressure
-  Plotly.newPlot('chart-pressure', [
-    { name: 'BME688 #1', x, y: n('bme688_1_pressure_hpa'), ...line('BME688 #1', '#1a7f37') },
-    { name: 'BME688 #2', x, y: n('bme688_2_pressure_hpa'), ...line('BME688 #2', '#cf222e') },
-  ], layout('Pressure', 'hPa'), CFG);
-
-  // Gas resistance
-  Plotly.newPlot('chart-gas', [
-    { name: 'BME688 #1', x, y: n('bme688_1_gas_ohms'), ...line('BME688 #1', '#1a7f37') },
-    { name: 'BME688 #2', x, y: n('bme688_2_gas_ohms'), ...line('BME688 #2', '#cf222e') },
-  ], layout('Gas Resistance (VOC proxy)', 'Ω'), CFG);
-
-  // Light spectrum — only if AS7341 columns present
-  const hasLight = rows[0] && rows[0].as7341_f1 !== undefined;
-  if (hasLight) {
-    Plotly.newPlot('chart-light', [
-      { name: 'F1 Blue',   x, y: n('as7341_f1'),    ...line('F1',    '#1f6feb') },
-      { name: 'F2 Cyan',   x, y: n('as7341_f2'),    ...line('F2',    '#1b7c83') },
-      { name: 'F3 Green',  x, y: n('as7341_f3'),    ...line('F3',    '#1a7f37') },
-      { name: 'F4 Yellow', x, y: n('as7341_f4'),    ...line('F4',    '#9a6700') },
-      { name: 'CLEAR',     x, y: n('as7341_clear'), ...line('CLEAR', '#656d76') },
-      { name: 'NIR',       x, y: n('as7341_nir'),   ...line('NIR',   '#8250df') },
-    ], layout('AS7341 Light Spectrum', 'Counts'), CFG);
-  } else {
-    document.getElementById('chart-light').innerHTML =
-      '<div class="placeholder-msg">AS7341 data not present in this file</div>';
-  }
-
-  // Pump state (ON=1, OFF=0)
-  const pumpY = rows.map(r => r.pump_state === 'ON' ? 1 : 0);
-  Plotly.newPlot('chart-pump', [
-    { name: 'Pump ON/OFF', x, y: pumpY, mode: 'lines',
-      line: { color: '#9a6700', width: 1.5 }, fill: 'tozeroy', fillcolor: 'rgba(154,103,0,0.12)' },
-  ], Object.assign(layout('Pump State', ''), {
-    yaxis: Object.assign({}, PLY.yaxis, {
-      tickvals: [0, 1], ticktext: ['OFF', 'ON'],
-      title: { text: '', font: { color: '#636c76' } },
-    }),
-  }), CFG);
-}
-
-// ─── Load & render ────────────────────────────────────────────────────────────
-function loadRows(rows, filename) {
-  // Charts
-  plotData(rows);
-
-  // Raw data Tabulator
-  if (rawTable) { rawTable.destroy(); }
-  rawTable = new Tabulator('#raw-table', {
-    data: rows,
-    layout: 'fitDataTable',
-    pagination: 'local',
-    paginationSize: 50,
-    paginationSizeSelector: [25, 50, 100, 200],
-    columns: RAW_COLUMNS.filter(c => rows[0] && c.field in rows[0]),
-    headerSort: true,
-  });
-
-  // Status bar
-  const bar = document.getElementById('status-bar');
-  document.getElementById('status-text').textContent =
-    `${filename} — ${rows.length.toLocaleString()} rows loaded`;
-  bar.classList.add('visible');
-
-  // Enable download button
-  document.getElementById('raw-download-btn').disabled = false;
-  document.getElementById('raw-count').textContent = `${rows.length.toLocaleString()} rows`;
-}
-
-function handleFile(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const rows = parseCSV(e.target.result);
-    if (!rows.length) { alert('No valid data rows found in this file.'); return; }
-    loadRows(rows, file.name);
-  };
-  reader.readAsText(file);
-}
-
-function clearData() {
-  // Reset charts to placeholder
-  ['chart-temp','chart-humidity','chart-pressure','chart-gas','chart-light','chart-pump'].forEach(id => {
-    const el = document.getElementById(id);
-    Plotly.purge(el);
-    el.innerHTML = `<div class="placeholder-msg">Load a CSV to see data</div>`;
-  });
-  if (rawTable) { rawTable.destroy(); rawTable = null; }
-  document.getElementById('status-bar').classList.remove('visible');
-  document.getElementById('raw-download-btn').disabled = true;
-  document.getElementById('raw-count').textContent = '';
-  document.getElementById('file-input').value = '';
-}
-
-// ─── File input & drag-and-drop wiring ───────────────────────────────────────
-document.getElementById('file-input').addEventListener('change', e => {
-  handleFile(e.target.files[0]);
-});
-
-const zone = document.getElementById('drop-zone');
-zone.addEventListener('click', () => document.getElementById('file-input').click());
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('hover'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
-zone.addEventListener('drop', e => {
-  e.preventDefault();
-  zone.classList.remove('hover');
-  handleFile(e.dataTransfer.files[0]);
-});
-
-// ─── Study Summary Rendering ─────────────────────────────────────────────────
-// Reads window.STUDY_SUMMARIES populated by docs/js/study*.js (loaded above).
-// Renders for each study:
-//   • 6 summary cards  (dates, wall-clock time, logged time, sessions, gaps)
-//   • Plotly session-timeline chart (thick coloured line per session)
-//   • Plotly bad-data bar chart (duration per sensor, orange bars)
-//   • Tabulator variable-stats table  (sortable, downloadable CSV)
-
-const STUDY_COLORS = [
-  '#0969da','#1a7f37','#cf222e','#9a6700',
-  '#8250df','#1b7c83','#bf3989','#116329',
-  '#953800','#0550ae',
-];
-
-const DL_ICON = `<svg viewBox="0 0 16 16"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.97a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg>`;
-
-function renderAllStudies() {
-  const container = document.getElementById('studies-container');
-  const summaries  = window.STUDY_SUMMARIES || {};
-  // Sort chronologically by first sample
-  const studies = Object.values(summaries).sort(
-    (a, b) => (a.timeline.first || '').localeCompare(b.timeline.first || '')
-  );
-
-  if (!studies.length) return; // leave the "run build.sh" placeholder visible
-
-  container.innerHTML = ''; // clear placeholder
-  studies.forEach(data => renderStudy(container, data));
-}
-
-function renderStudy(container, data) {
-  const name        = data.study;
-  const t           = data.timeline;
-  const vars        = data.variables || {};
-  const displayName = name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  const varCount    = Object.keys(vars).length;
-  const chartH      = Math.max(317, Math.round(t.sessions.length * 36 + 108));
-
-  // ── Build DOM ──────────────────────────────────────────────────────────────
-  const block = document.createElement('div');
-  block.className = 'study-block';
-  block.id = `study-${name}`;
-
-  const descHtml = data.description
-    ? `<div class="study-description">${data.description.replace(/\n/g, '<br>')}</div>`
-    : '';
-
-  block.innerHTML = `
-    <div class="study-header">
-      <h3 class="study-title">${displayName}</h3>
-      <span class="study-gen">Generated: ${data.generated}</span>
-    </div>
-    ${descHtml}
-
-    <div class="card-grid study-cards">
-      <div class="card"><div class="label">First Sample</div><div class="value sval">${t.first}</div></div>
-      <div class="card"><div class="label">Last Sample</div><div class="value sval">${t.last}</div></div>
-      <div class="card"><div class="label">Wall Clock</div><div class="value">${t.wall_clock_hours} h</div></div>
-      <div class="card"><div class="label">Total Logged</div><div class="value">${t.total_logged_hours} h</div></div>
-      <div class="card"><div class="label">Sessions</div><div class="value">${t.session_count}</div></div>
-      <div class="card"><div class="label">Gaps</div><div class="value">${t.gap_count}</div></div>
-    </div>
-
-    <div class="study-chart-row">
-      <div class="chart-box" id="timeline-${name}" style="height:${chartH}px"></div>
-      <div class="chart-box" id="baddata-${name}"  style="height:${chartH}px"></div>
-    </div>
-
-    <div class="tbl-controls">
-      <button class="btn" id="dl-stats-${name}">${DL_ICON} Download CSV</button>
-      <span style="color:var(--text-dim);font-size:.85rem">${varCount} variables</span>
-    </div>
-    <div id="table-stats-${name}"></div>
-  `;
-  container.appendChild(block);
-
-  // ── Tabulator variable stats ───────────────────────────────────────────────
-  const tblData = Object.entries(vars).map(([col, v]) => ({
-    variable: v.label || col,
-    unit:     v.unit,
-    valid:    v.valid_rows,
-    bad:      v.bad_rows,
-    bad_s:    v.bad_duration_s,
-    reasons:  Object.keys(v.bad_reasons || {}).join(', ') || '—',
-    min:      v.min,
-    max:      v.max,
-    range:    v.range,
-    mean:     v.mean,
-  }));
-
-  const fmt0  = cell => (cell.getValue() ?? 0).toLocaleString();
-  const fmtBad = cell => {
-    const v = cell.getValue() ?? 0;
-    return v > 0 ? `<span style="color:#f78166">${v.toLocaleString()}</span>` : '0';
-  };
-  const fmtNum = cell => {
-    const v = cell.getValue();
-    return (v !== null && v !== undefined) ? v : '—';
-  };
-
-  const statsTbl = new Tabulator(`#table-stats-${name}`, {
-    data: tblData,
-    layout: 'fitColumns',
-    headerSort: true,
-    initialSort: [{ column: 'variable', dir: 'asc' }],
-    columns: [
-      { title: 'Variable',    field: 'variable', headerSort: true,  widthGrow: 2 },
-      { title: 'Unit',        field: 'unit',     headerSort: true,  width: 80 },
-      { title: 'Valid Rows',  field: 'valid',    headerSort: true,  sorter: 'number', hozAlign: 'right', width: 110, formatter: fmt0 },
-      { title: 'Bad Rows',    field: 'bad',      headerSort: true,  sorter: 'number', hozAlign: 'right', width: 100, formatter: fmtBad },
-      { title: 'Bad Dur (s)', field: 'bad_s',    headerSort: true,  sorter: 'number', hozAlign: 'right', width: 110, formatter: fmtBad },
-      { title: 'Bad Reason',  field: 'reasons',  headerSort: false, widthGrow: 1 },
-      { title: 'Min',         field: 'min',      headerSort: true,  sorter: 'number', hozAlign: 'right', width: 90, formatter: fmtNum },
-      { title: 'Max',         field: 'max',      headerSort: true,  sorter: 'number', hozAlign: 'right', width: 90, formatter: fmtNum },
-      { title: 'Range',       field: 'range',    headerSort: true,  sorter: 'number', hozAlign: 'right', width: 90, formatter: fmtNum },
-      { title: 'Mean',        field: 'mean',     headerSort: true,  sorter: 'number', hozAlign: 'right', width: 90, formatter: fmtNum },
-    ],
-  });
-
-  document.getElementById(`dl-stats-${name}`).addEventListener('click', () => {
-    statsTbl.download('csv', `${name}_variable_stats.csv`);
-  });
-
-  // ── Plotly: session timeline ───────────────────────────────────────────────
-  // One thick horizontal line per session; gaps visible as whitespace.
-  const timeTraces = t.sessions.map((s, i) => ({
-    type: 'scatter',
-    mode: 'lines',
-    x: [s.start, s.end],
-    y: [`S${i + 1}`, `S${i + 1}`],
-    line: { color: STUDY_COLORS[i % STUDY_COLORS.length], width: 14 },
-    hovertemplate:
-      `<b>Session ${i + 1}</b><br>` +
-      `File: ${s.file}<br>` +
-      `Start: ${s.start}<br>` +
-      `End:&nbsp;&nbsp; ${s.end}<br>` +
-      `Duration: ${(s.duration_s / 3600).toFixed(2)} h<br>` +
-      `Rows: ${s.rows.toLocaleString()}<extra></extra>`,
-    showlegend: false,
-  }));
-
-  Plotly.newPlot(`timeline-${name}`, timeTraces, {
-    paper_bgcolor: '#ffffff', plot_bgcolor: '#f6f8fa',
-    font:     { color: '#1f2328', family: 'Segoe UI, Arial, sans-serif', size: 11 },
-    title:    { text: 'Session Timeline', font: { color: '#1f2328', size: 13 }, x: 0.04 },
-    xaxis:    { type: 'date', gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' },
-    yaxis:    { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76', tickfont: { size: 10 } },
-    hovermode: 'closest',
-    showlegend: false,
-    margin:   { t: 40, r: 12, b: 44, l: 44 },
-    height:   chartH,
-  }, CFG);
-
-  // ── Plotly: bad-data duration bar chart ───────────────────────────────────
-  // Horizontal orange bars — one per variable that has bad rows — sorted by
-  // duration descending.  Green "no bad data" message if all sensors clean.
-  const badEntries = Object.entries(vars)
-    .filter(([, v]) => v.bad_rows > 0)
-    .sort((a, b) => b[1].bad_duration_s - a[1].bad_duration_s);
-
-  if (!badEntries.length) {
-    document.getElementById(`baddata-${name}`).innerHTML =
-      `<div style="height:${chartH}px;display:flex;align-items:center;
-                   justify-content:center;flex-direction:column;gap:8px;
-                   color:var(--green);font-size:.9rem">
-         <span style="font-size:1.6rem">✓</span>No bad data detected
-       </div>`;
-  } else {
-    const bLabels    = badEntries.map(([, v]) => v.label);
-    const bDurations = badEntries.map(([, v]) => v.bad_duration_s);
-    const bReasons   = badEntries.map(([, v]) =>
-      Object.entries(v.bad_reasons)
-        .map(([k, n]) => `${k}: ${n.toLocaleString()}`)
-        .join(', ')
-    );
-    const bCounts = badEntries.map(([, v]) => v.bad_rows);
-
-    Plotly.newPlot(`baddata-${name}`, [{
-      type: 'bar', orientation: 'h',
-      x: bDurations, y: bLabels,
-      customdata: bReasons.map((r, i) => [r, bCounts[i]]),
-      marker: { color: '#cf222e', opacity: 0.85 },
-      hovertemplate:
-        '<b>%{y}</b><br>' +
-        'Duration: %{x} s<br>' +
-        'Rows: %{customdata[1]}<br>' +
-        'Reason: %{customdata[0]}<extra></extra>',
-    }], {
-      paper_bgcolor: '#ffffff', plot_bgcolor: '#f6f8fa',
-      font:     { color: '#1f2328', family: 'Segoe UI, Arial, sans-serif', size: 11 },
-      title:    { text: 'Bad / Out-of-Range Duration', font: { color: '#1f2328', size: 13 }, x: 0.04 },
-      xaxis:    { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76',
-                  title: { text: 'seconds', font: { color: '#636c76', size: 11 } } },
-      yaxis:    { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76',
-                  automargin: true, tickfont: { size: 10 } },
-      hovermode: 'closest',
-      margin:   { t: 40, r: 20, b: 54, l: 16 },
-      height:   chartH,
-    }, CFG);
-  }
-
-  // ── Study time-series charts (from window.STUDY_CHARTS) ───────────────────
-  const tsH = document.createElement('h3');
-  tsH.style.cssText = 'font-size:1rem;color:var(--blue);margin:28px 0 8px';
-  tsH.textContent   = 'Time-Series Charts';
-  block.appendChild(tsH);
-
-  const studyCharts = (window.STUDY_CHARTS || {})[name];
-  if (studyCharts) {
-    const tsInfo = document.createElement('p');
-    tsInfo.style.cssText = 'font-size:.8rem;color:var(--text-dim);margin-bottom:14px';
-    tsInfo.textContent =
-      `${studyCharts.sampled_rows.toLocaleString()} of ` +
-      `${studyCharts.original_rows.toLocaleString()} rows plotted (downsampled). ` +
-      'Gaps indicate session breaks.';
-    block.appendChild(tsInfo);
-  }
-
-  const tsContainer = document.createElement('div');
-  block.appendChild(tsContainer);
-  renderStudyCharts(name, tsContainer);
-
-  // ── Results interpretation bullets ───────────────────────────────────────
-  const interp = data.interpretation;
-  if (interp && interp.bullets && interp.bullets.length) {
-    const iH = document.createElement('h3');
-    iH.style.cssText = 'font-size:1rem;color:var(--blue);margin:28px 0 10px';
-    iH.textContent   = 'Results Interpretation';
-    block.appendChild(iH);
-
-    const iNote = document.createElement('p');
-    iNote.style.cssText = 'font-size:.8rem;color:var(--text-dim);margin-bottom:12px';
-    iNote.textContent =
-      'Auto-generated from logged statistics. Consider sensor placement, ' +
-      'conditioning time, and session continuity when interpreting.';
-    block.appendChild(iNote);
-
-    const ul = document.createElement('ul');
-    ul.className = 'interp-list';
-    interp.bullets.forEach(b => {
-      const li = document.createElement('li');
-      li.textContent = b;
-      ul.appendChild(li);
-    });
-    block.appendChild(ul);
-  }
-
-  // ── Local weather context chart ──────────────────────────────────────────
-  renderStudyWeather(name, block);
-
-  // ── Sensor cross-correlation scatter plots + data export ────────────────
-  const tsCharts = (window.STUDY_CHARTS || {})[name];
-  if (tsCharts) {
-    renderStudyScatter(name, block, tsCharts);
-    renderStudyDataExport(name, block, tsCharts);
-  }
-}
-
-// ─── Study data export + paginated preview ───────────────────────────────────
-// Builds a wide CSV from window.STUDY_CHARTS: one timestamp column + one column
-// per sensor trace across all groups.  Renders a 10-row-per-page Tabulator
-// preview and a Download CSV button.
-function renderStudyDataExport(name, block, charts) {
-  const groupOrder = ['temperature', 'humidity', 'pressure', 'gas', 'light'];
-
-  // Column descriptors: [{ header, field, gk, ti }]
-  const cols = [{ header: 'timestamp', field: 'ts' }];
-  groupOrder.forEach(gk => {
-    const g = charts.groups[gk];
-    if (!g) return;
-    g.traces.forEach((t, ti) => {
-      cols.push({
-        header: `${g.title} - ${t.name} (${g.unit})`,
-        field:  `${gk}_${ti}`,
-        gk, ti,
-      });
-    });
-  });
-
-  // Row objects
-  const rows = charts.x.map((ts, i) => {
-    const row = { ts };
-    cols.slice(1).forEach(c => {
-      const v = charts.groups[c.gk].traces[c.ti].y[i];
-      row[c.field] = (v !== null && v !== undefined) ? v : '';
-    });
-    return row;
-  });
-
-  // CSV download
-  function downloadCSV() {
-    const header = cols.map(c => `"${c.header}"`).join(',');
-    const body   = rows.map(r =>
-      cols.map(c => {
-        const v = r[c.field];
-        return (v === '' || v === null || v === undefined) ? '' : v;
-      }).join(',')
-    ).join('\n');
-    const blob = new Blob([header + '\n' + body], { type: 'text/csv' });
-    const a    = document.createElement('a');
-    a.href     = URL.createObjectURL(blob);
-    a.download = `${name}_timeseries.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  // Section heading
-  const expH = document.createElement('h3');
-  expH.style.cssText = 'font-size:1rem;color:var(--blue);margin:28px 0 8px';
-  expH.textContent   = 'Data Export';
-  block.appendChild(expH);
-
-  // Controls row
-  const ctrl = document.createElement('div');
-  ctrl.className = 'tbl-controls';
-  ctrl.innerHTML = `
-    <button class="btn" id="dl-ts-${name}">${DL_ICON} Download CSV</button>
-    <span style="color:var(--text-dim);font-size:.85rem">
-      ${charts.sampled_rows.toLocaleString()} rows &times; ${cols.length - 1} sensor columns
-      &nbsp;&mdash;&nbsp; downsampled from ${charts.original_rows.toLocaleString()} original rows
-    </span>`;
-  block.appendChild(ctrl);
-  document.getElementById(`dl-ts-${name}`)
-    .addEventListener('click', downloadCSV);
-
-  // Paginated preview table
-  const tblDiv = document.createElement('div');
-  tblDiv.id = `ts-preview-${name}`;
-  tblDiv.style.marginBottom = '8px';
-  block.appendChild(tblDiv);
-
-  new Tabulator(`#ts-preview-${name}`, {
-    data: rows,
-    layout: 'fitDataTable',
-    pagination: 'local',
-    paginationSize: 10,
-    paginationSizeSelector: [10, 25, 50, 100],
-    headerSort: false,
-    columns: cols.map(c => ({
-      title:  c.header,
-      field:  c.field,
-      width:  c.field === 'ts' ? 180 : 110,
-      formatter: cell => {
-        const v = cell.getValue();
-        return (v === '' || v === null || v === undefined)
-          ? `<span style="color:var(--text-dim)">—</span>`
-          : v;
-      },
-    })),
-  });
-}
-
-// ─── Per-chart sensor context notes ─────────────────────────────────────────
-// Returns an array of bullet HTML strings for a given sensor group.
-// Covers detection mechanism, inter-sensor differences, and manufacturer /
-// peer-reviewed references for each sensor type.
-function studyGroupNotes(studyName, groupKey) {
-  const outlet    = studyName === 'study002_ecoli' || studyName === 'study003_ecoli';
-  const sht30Ref  = '<a href="https://sensirion.com/products/catalog/SHT30-DIS-B/" target="_blank" rel="noopener">Sensirion SHT30 product page</a>';
-  const bme688Ref = '<a href="https://www.bosch-sensortec.com/products/environmental-sensors/gas-sensors/bme688/" target="_blank" rel="noopener">Bosch Sensortec BME688</a>';
-  const as7341Ref = '<a href="https://wiki.dfrobot.com/Gravity_AS7341_Visible_Light_Sensor_SKU_SEN0364" target="_blank" rel="noopener">DFRobot Gravity AS7341 (SEN0364)</a>';
-  const moxRef    = '<a href="https://www.sciencedirect.com/science/article/pii/S2214180423000107" target="_blank" rel="noopener">Wöllner et al., Sens. Actuators B (2023) — MOX sensors in fermentation</a>';
-
-  const n = {
-
-    // ── Dual-axis Temperature + Pressure chart ────────────────────────────
-    temp_pres: [
-      '<b>SHT30 Temperature:</b> Sensirion CMOSens® technology integrates a polysilicon bandgap resistive thermometer directly on a CMOS die. Accuracy ±0.2 °C (typical), ±0.7 °C (max) over 0–90 °C. No internal heat source — tracks true ambient air temperature with negligible self-heating. Response time τ₆₃ ≈ 2 s. ' + sht30Ref,
-      '<b>BME688 Temperature:</b> MEMS resistive sensor co-integrated on the same die as the metal-oxide gas sensor hot plate (~340 °C). Residual thermal conduction from the hot plate causes a systematic +1–3 °C positive offset even after factory compensation. Accuracy ±1.0 °C (typical). BME688 temperature readings are less accurate than SHT30 and should be treated as indicative rather than precise. ' + bme688Ref,
-      '<b>Inter-sensor difference:</b> The SHT30 consistently reads lower than the BME688 because (1) it has no internal heat source, (2) it has tighter factory calibration (±0.2 vs ±1.0 °C), and (3) they may sample slightly different airstreams. A persistent SHT30-vs-BME688 offset of 1–3 °C is consistent with manufacturer specifications and should not be interpreted as a measurement error.',
-      outlet
-        ? '<b>Placement (Study 002):</b> SHT30 and BME688 #1 are bench-mounted and measure room-ambient temperature. BME688 #2 is mounted at the bioreactor exhaust outlet (~30 cm above BME688 #1); its temperature is the closest available proxy for culture headspace temperature. A sustained positive offset (BME688 #2 warmer than BME688 #1) is expected because exhaust air has been thermally equilibrated near culture temperature (~25–37 °C).'
-        : '<b>Placement (Study 001):</b> Both SHT30 and BME688 #1 are bench-mounted adjacent to the bioreactor. Neither sensor contacts the culture. Temperature readings reflect bench-ambient room conditions only.',
-      'Open vessel — T and P are decoupled: for an ideal gas in a sealed constant-volume vessel, dP/dT = P/T ≈ 3.4 hPa/K. This reactor is open to atmosphere, so culture heating cannot drive pressure changes. Any apparent T–P correlation is meteorological pressure variation or a BME688 temperature-compensation artefact, not culture physiology. Pressure accuracy: ±0.6 hPa (typical), ±1.0 hPa (max). ' + bme688Ref,
-    ],
-
-    // ── Temperature time-series chart ─────────────────────────────────────
-    temperature: [
-      '<b>SHT30:</b> Sensirion CMOSens® bandgap resistive thermometer. Accuracy ±0.2 °C (typical). No internal heat source — closely tracks true ambient temperature. ' + sht30Ref,
-      '<b>BME688 (both sensors):</b> MEMS resistive thermometer co-integrated with the gas sensor hot plate. Accuracy ±1.0 °C (typical). Self-heating from the ~340 °C hot plate causes a +1–3 °C positive offset that persists after factory compensation. ' + bme688Ref,
-      '<b>Inter-sensor difference — SHT30 vs BME688:</b> Expect the SHT30 to read 1–3 °C lower than either BME688. This is a systematic, predictable offset caused by BME688 chip self-heating, not a calibration error. Both are measuring the same physical environment; the SHT30 measurement is closer to true air temperature.',
-      outlet
-        ? '<b>BME688 #2 (exhaust outlet) vs BME688 #1 (bench):</b> Both are the same sensor model but in different positions. BME688 #2 is expected to read warmer when culture thermal output heats the exhaust stream. The ΔT between the two BME688 sensors is an indirect measure of the thermal gradient between room ambient and the bioreactor headspace.'
-        : null,
-      'Short-duration temperature spikes (<60 s) in any sensor most likely reflect HVAC cycling, door openings, or sensor power-on transients — not biological events.',
-    ].filter(Boolean),
-
-    // ── Humidity time-series chart ────────────────────────────────────────
-    humidity: [
-      '<b>SHT30 Humidity:</b> Capacitive polymer sensor. A hygroscopic polymer dielectric film absorbs or desorbs water vapour proportionally to ambient relative humidity, changing its dielectric constant and thus the capacitance of a CMOS-integrated co-planar capacitor. Accuracy ±2 % RH (typical) over 10–90 % RH. Low hysteresis; the polymer recovers rapidly from condensation exposure. ' + sht30Ref,
-      '<b>BME688 Humidity:</b> Also a capacitive polymer element, but co-integrated on the die with the gas sensor hot plate. The proximity of the ~340 °C hot plate introduces measurement noise during gas-sensing heater cycles and makes the element more susceptible to condensation-induced drift. Accuracy ±3 % RH (typical). ' + bme688Ref,
-      '<b>Inter-sensor difference — SHT30 vs BME688:</b> Both use capacitive polymer transduction but with different polymer formulations, geometries, and housings. Agreement within ±3–5 % RH is within combined sensor tolerances. Divergence beyond ±5 % RH may indicate condensation on the BME688 element, placement in different airstreams, or calibration drift after repeated thermal cycling.',
-      outlet
-        ? '<b>BME688 #2 (exhaust outlet):</b> Saturation vapour pressure P*(37 °C) ≈ 62.8 hPa vs P*(22 °C) ≈ 26.4 hPa (Antoine equation) — exhaust air at culture temperature carries 2.4× more water vapour than bench air at room temperature. BME688 #2 is therefore expected to read near 100 % RH. Values ≥ 99.9 % RH are flagged as bad data (sensor saturation or condensation on the polymer element).'
-        : '<b>Bench sensors (SHT30 and BME688 #1):</b> Both measure bench-ambient humidity controlled by HVAC (typically 30–60 % RH). These readings do not reflect bioreactor headspace conditions.',
-      'Clausius-Clapeyron slope: dP*/dT ≈ L<sub>v</sub>·P*/(R<sub>v</sub>·T²) ≈ 1.8 hPa/°C at 300 K. A 15 °C rise from bench ambient to culture temperature roughly doubles saturation vapour pressure. Condensation on a sensing polymer permanently biases the baseline until the element fully dries.',
-    ],
-
-    // ── Pressure time-series chart ────────────────────────────────────────
-    pressure: [
-      '<b>BME688 Pressure:</b> Capacitive MEMS barometric sensor. A thin silicon diaphragm is suspended over a sealed reference vacuum cavity; atmospheric pressure deflects the diaphragm, changing capacitance between the diaphragm and a fixed electrode. On-chip ASIC converts capacitance to pressure with temperature compensation. Absolute accuracy ±0.6 hPa (typical), ±1.0 hPa (max) at 25 °C. Resolution 0.18 Pa. ' + bme688Ref,
-      '<b>SHT30 does not measure pressure.</b> All pressure data in this study comes from the BME688 sensor(s) only.',
-      outlet
-        ? '<b>BME688 #1 vs BME688 #2 pressure offset:</b> Both measure absolute atmospheric pressure. BME688 #2 is ~30 cm higher on the rack; the expected hydrostatic offset at that height is ρgh ≈ 1.2 kg/m³ × 9.81 m/s² × 0.30 m ≈ 3.5 Pa ≈ 0.035 hPa — well below sensor noise. Any larger persistent offset reflects sensor-to-sensor factory calibration variation, not the height difference.'
-        : null,
-      'Open vessel: P<sub>internal</sub> = P<sub>atm</sub>. Culture metabolism (CO₂ production, VOC outgassing, evaporation) cannot build gauge pressure in an open reactor. Pressure variation across sessions (typically 2–15 hPa) reflects synoptic meteorology — passing weather fronts — not biology. Detecting culture-driven pressure changes would require a sealed vessel with a differential pressure transducer.',
-    ].filter(Boolean),
-
-    // ── Gas resistance time-series chart ──────────────────────────────────
-    gas: [
-      '<b>BME688 Metal-Oxide Gas Sensor (MOX):</b> A thin film of metal oxide (tin dioxide, SnO₂, or a doped proprietary variant) is deposited on a microfabricated resistive hot plate operating at 300–400 °C. At operating temperature, atmospheric oxygen adsorbs as O₂⁻ surface species, establishing a high baseline resistance R₀. Reducing volatile organic compounds (VOCs) donate electrons to the oxide surface, replenishing oxygen vacancies and lowering resistance. The resistance response follows: R = R₀ · [C<sub>VOC</sub>]<sup>−α</sup> · exp(E<sub>a</sub>/kT), where α ≈ 0.3–0.7 (gas-dependent) and E<sub>a</sub> ≈ 0.1–0.5 eV. ' + bme688Ref,
-      '<b>Thermal conditioning (burn-in):</b> After each power-on, the hot plate requires 1–3 hours of continuous operation before the baseline resistance R₀ stabilises. Early-session gas resistance values are unreliable and should not be used for culture-growth interpretation. This burn-in requirement applies to every session restart. ' + moxRef,
-      '<b>Non-selectivity:</b> The MOX element integrates the simultaneous response to all reducing gases. A single resistance value cannot distinguish acetic acid from ethanol from acetoin. CO₂ — the primary E. coli respiration product — is NOT detected because it is fully oxidised (donates no electrons to the n-type oxide). Distinguishing individual metabolites would require temperature cycling of the hot plate or a multi-sensor array approach. ' + moxRef,
-      outlet
-        ? '<b>BME688 #1 (bench) vs BME688 #2 (exhaust outlet):</b> BME688 #1 measures ambient lab VOC background (cleaning agents, solvents, human respiration) and provides an environmental drift reference. BME688 #2, at the bioreactor exhaust outlet, measures the sum of ambient background plus culture-derived metabolic VOCs (acetate, ethanol, acetoin from E. coli overflow metabolism). The differential signal ΔR = R(BME688 #1) − R(BME688 #2) partially cancels ambient drift and isolates the culture VOC contribution. A sustained decrease in R(BME688 #2) relative to R(BME688 #1) over the fermentation time course is consistent with increasing VOC production as the culture reaches high cell density.'
-        : '<b>BME688 #1 (bench, Study 001):</b> Measures ambient lab VOC background only. Changes in gas resistance primarily reflect lab environmental variation (ventilation changes, lab activities, time of day) rather than culture metabolism. Useful as an environmental baseline for comparison with Study 002.',
-    ].filter(Boolean),
-
-    // ── Light spectrum time-series chart ──────────────────────────────────
-    light: [
-      '<b>AS7341 Spectral Sensor:</b> CMOS-based 11-channel spectral sensor (AMS-OSRAM AS7341). Narrowband optical interference filters are deposited directly on-chip above individual silicon photodiodes to isolate specific wavelength bands (~30–40 nm FWHM each). Each photodiode converts photons to charge accumulated in a 16-bit ADC (0–65535 counts; 65535 = saturated). Channels: F1 (415 nm, violet), F2 (445 nm, indigo), F3 (480 nm, blue), F4 (515 nm, cyan-green), F5 (555 nm, green), F6 (590 nm, amber), F7 (630 nm, orange-red), F8 (680 nm, red), CLEAR (broadband 380–700 nm), NIR (~855 nm). ' + as7341Ref,
-      '<b>Photobleaching — not applicable to this sensor:</b> Photobleaching is the irreversible photochemical destruction of organic fluorophores or dye molecules by prolonged photon absorption. The AS7341 uses <em>thin-film dielectric interference filters</em> (metal-oxide multilayer coatings) deposited directly on silicon photodiodes — there are no organic dyes or fluorescent molecules in the optical path. Silicon and metal-oxide materials have no bleachable molecular bonds; they do not degrade under sustained illumination under normal lab conditions. The sensor is therefore immune to photobleaching and long-term exposure to consistent light will not cause readings to drift toward either a minimum or a maximum.',
-      '<b>Output scale — 0 to 1000, not raw 16-bit:</b> The DFRobot_AS7341 library used in this firmware outputs normalized channel values on a <b>0–1000 scale</b>, not raw 16-bit ADC counts (0–65535). A reading of exactly 1000 means the channel is at the library\'s full-scale ceiling — the internal ADC has saturated for the current gain and integration time settings. This is confirmed by the study003 data: no channel ever exceeds 1000, and the ceiling at 1000 is exact and discrete. The pipeline\'s saturation filter has been updated to flag values ≥ 1000 as <code>above_max</code>.',
-      '<b>Channel saturation under lab lighting — what you are seeing in study003:</b> Channels F3 (480 nm, blue) and F4 (515 nm, cyan-green) reach 1000 in 63–90% of study003 rows. CLEAR (broadband visible) saturates at the same rate. F1 (415 nm, deep violet) peaks at ~320 and never saturates. NIR (855 nm) peaks at ~550 and never saturates. This spectral pattern is diagnostic of <b>LED white-light lab overhead lighting</b>: white LEDs produce a strong narrow blue/cyan peak centred on 450–550 nm that directly overlaps F3 and F4, much weaker deep-violet output (below 430 nm, explaining why F1 stays low), and minimal near-infrared emission (explaining why NIR stays low). Without optical shielding the sensor is acting as a lab-light detector, not a culture turbidity sensor. The channels that do not saturate — F1 and NIR — may still carry real signal if any culture-driven change in transmittance is present.',
-      '<b>Saturation is instantaneous and reversible — not drift:</b> The rise of F3/F4/CLEAR toward 1000 is not a slow drift caused by sensor ageing or photobleaching. It occurs when the incident photon flux exceeds the photodiode\'s charge-accumulation capacity within the integration window. Turn off the overhead lights or shield the sensor and values immediately return to the low levels seen in the early sessions. The apparent "drift" toward maximum in the time-series is the result of changing ambient light conditions over the course of the study day — room lights switching on, sunlight angle changing, or the sensor being repositioned closer to a light source.',
-      '<b>Gain and integration time:</b> The firmware does not explicitly set AS7341 gain or integration time, so the DFRobot library defaults apply. With default settings, the saturation ceiling of 1000 is reached under normal room lighting for the green-cyan channels. Lowering the gain (e.g., to 16× or 32×) or reducing the integration period in the firmware would push saturation to higher light levels and allow the sensor to resolve more detail in bright environments. However, optical shielding of the bioreactor vessel is required before any gain adjustment would make the data interpretable as a turbidity proxy.',
-      '<b>Use as OD₆₀₀ proxy:</b> Standard optical density measurement uses 600 nm light; as cell density increases, scattering and absorption reduce transmitted intensity. F5 (555 nm) and F6 (590 nm) are the nearest available channels to 600 nm and should show decreasing counts as the culture grows. The NIR channel (855 nm) is relatively insensitive to pigment absorption and serves as a turbidity reference decoupled from pigment signals.',
-      '<b>GFP detection context:</b> The E. coli strain expresses GFP (excitation maximum ≈ 488 nm, emission maximum ≈ 509 nm). F3 (480 nm) and F4 (515 nm) are closest to the GFP excitation and emission peaks, respectively. Without a dedicated 488 nm excitation source and a long-pass emission filter, GFP fluorescence will be negligible against broad-spectrum ambient illumination. True GFP quantification requires an opaque vessel enclosure, a matched excitation LED, and an emission bandpass filter.',
-      studyName === 'study002_ecoli'
-        ? '<b>Data coverage (Study 002):</b> The AS7341 was added only in the final sessions of this study — approximately 6 valid data points exist. Treat these as proof-of-concept measurements only. Reliable OD-proxy tracking requires consistent sensor-to-vessel geometry and readings at regular intervals across the full culture growth curve.'
-        : '<b>Data coverage (Study 003):</b> The AS7341 was active across all sessions in this study, providing a continuous spectral record throughout the run. Channel counts reflect whatever ambient light reached the sensor — without an opaque enclosure, culture-driven changes in transmittance are superimposed on room-lighting variation. Trends that persist independently in F5/F6 vs. NIR are more likely to reflect culture optical density changes than those that track across all channels simultaneously.',
-      '<b>Ambient light contamination:</b> Without optical shielding of the bioreactor vessel, all channels are dominated by lab room illumination. Counts will change with lamp switching, room occupancy, and time of day rather than with culture turbidity. Enclosing the bioreactor in an opaque housing with the sensor at a fixed standoff distance is required before these readings can be interpreted quantitatively.',
-    ],
-  };
-  return (n[groupKey] || []).filter(Boolean);
-}
-
-// ─── Scatter statistics + interpretation ─────────────────────────────────────
-function computeScatterStats(xArr, yArr) {
-  const n = xArr.length;
-  if (n < 2) return null;
-  const mx = xArr.reduce((a, b) => a + b, 0) / n;
-  const my = yArr.reduce((a, b) => a + b, 0) / n;
-  const offset = my - mx;
-  let num = 0, dx2 = 0, dy2 = 0;
-  for (let i = 0; i < n; i++) {
-    const dx = xArr[i] - mx, dy = yArr[i] - my;
-    num += dx * dy; dx2 += dx * dx; dy2 += dy * dy;
-  }
-  const r = (dx2 > 0 && dy2 > 0) ? num / Math.sqrt(dx2 * dy2) : 0;
-  return { meanX: mx, meanY: my, offset, r, n };
-}
-
-function buildScatterText(groupKey, tA, tB, st, unit, studyName) {
-  const { meanX, meanY, offset, r, n } = st;
-  const absOff  = Math.abs(offset);
-  const higher  = offset > 0 ? tB.name : tA.name;
-  const corrStr = r > 0.99 ? 'near-perfect' : r > 0.95 ? 'strong' : r > 0.8 ? 'moderate' : 'weak';
-  const outlet  = studyName === 'study002_ecoli' || studyName === 'study003_ecoli';
-  const dp      = unit === 'Ω' ? 0 : unit === 'hPa' ? 2 : 2;
-
-  let s = `<b>${tA.name} vs ${tB.name}</b> — ${n.toLocaleString()} paired valid points. `;
-  s += `${tA.name} mean: ${meanX.toFixed(dp)} ${unit};  ${tB.name} mean: ${meanY.toFixed(dp)} ${unit}. `;
-  s += `Mean offset: ${absOff.toFixed(dp)} ${unit} (${higher} reads higher). `;
-  s += `Pearson r = ${r.toFixed(3)} (${corrStr} correlation). `;
-
-  // Physical interpretation by group and sensor combination
-  const isShtVsBme = tA.name === 'SHT30' && tB.name.startsWith('BME');
-  const isBmeVsBme = tA.name.startsWith('BME') && tB.name.startsWith('BME');
-
-  if (groupKey === 'temperature') {
-    if (isShtVsBme && offset > 0) {
-      s += `The BME688 reads warmer than the SHT30 — the expected result of BME688 chip self-heating from its internal gas-sensor hot plate (~340 °C). The SHT30 has no internal heat source and more closely tracks true ambient air temperature. A 1–3 °C positive offset is within manufacturer tolerance and is systematic, not random (points cluster below the 1:1 reference line).`;
-    } else if (isShtVsBme && offset <= 0) {
-      s += `The SHT30 reads warmer than the BME688, which is atypical. Possible causes: SHT30 is located near a local heat source (pump motor, rack power supply), or the BME688 is in a cooler, more ventilated microenvironment.`;
-    } else if (isBmeVsBme && outlet && offset > 0.5) {
-      s += `BME688 #2 (exhaust outlet) reads ${absOff.toFixed(1)} °C warmer than BME688 #1 (bench). This reflects the thermal gradient between room-ambient air and the bioreactor exhaust, which is thermally equilibrated near culture temperature. The offset magnitude is an indirect measure of culture heat output and metabolic activity.`;
-    } else if (isBmeVsBme && outlet && offset < -0.5) {
-      s += `BME688 #1 (bench) reads warmer than BME688 #2 (exhaust outlet) in this aggregated dataset. This likely reflects sessions logged before BME688 #2 was relocated to the exhaust port, or pump-off intervals when headspace temperature had cooled toward ambient.`;
-    } else if (isBmeVsBme) {
-      s += `The ${absOff.toFixed(2)} °C mean offset between the two BME688 sensors is within the ±1.0 °C manufacturer accuracy specification and reflects sensor-to-sensor calibration variation and minor placement differences.`;
-    }
-
-  } else if (groupKey === 'humidity') {
-    const hasOutlet = outlet && (tA.name === 'BME688 #2' || tB.name === 'BME688 #2');
-    if (hasOutlet && absOff > 5) {
-      s += `The ${absOff.toFixed(0)} % RH offset reflects BME688 #2 sampling near-saturated exhaust air from the bioreactor headspace, while bench sensors measure lower HVAC-controlled room humidity. At 37 °C, saturation vapour pressure is ~2.4× that at 22 °C (Antoine equation), so near-100 % RH at the outlet is physically expected even before accounting for biological evaporation.`;
-    } else if (absOff < 3) {
-      s += `Agreement within ${absOff.toFixed(1)} % RH is within the combined sensor tolerances (SHT30 ±2 % RH; BME688 ±3 % RH). Both sensors are tracking the same ambient humidity reliably.`;
-    } else {
-      s += `An offset of ${absOff.toFixed(1)} % RH exceeds combined sensor tolerances. Possible causes: condensation on the BME688 polymer element, one sensor in a localised draught, or calibration drift after repeated high-humidity cycling.`;
-    }
-
-  } else if (groupKey === 'pressure') {
-    if (r > 0.98) {
-      s += `Near-perfect pressure correlation (r = ${r.toFixed(3)}) confirms both sensors are tracking the same meteorological signal. The ${absOff.toFixed(2)} hPa mean offset is within the ±0.6 hPa BME688 absolute accuracy specification and represents sensor-to-sensor calibration variation, not a physical pressure difference.`;
-    } else {
-      s += `Moderate pressure correlation may reflect BME688 temperature-compensation artefacts during sessions with large temperature swings, or sensor warm-up drift at session start.`;
-    }
-
-  } else if (groupKey === 'gas') {
-    if (outlet) {
-      if (offset < 0) {
-        s += `BME688 #1 (bench ambient) shows higher resistance than BME688 #2 (exhaust outlet) — consistent with culture-derived reducing VOCs (acetate, ethanol, acetoin from E. coli overflow metabolism) lowering resistance at the outlet sensor. Points cluster below the 1:1 reference line. A widening gap as fermentation progresses would indicate increasing VOC production with rising cell density.`;
-      } else {
-        s += `BME688 #1 (bench) shows lower resistance than BME688 #2 (exhaust) in this aggregated dataset. This can occur during early-session burn-in (BME688 #2 hot plate not yet thermally stabilised after power-on — requires 1–3 h) or when ambient lab VOC levels temporarily exceeded culture exhaust output.`;
-      }
-    } else {
-      s += `Only bench-ambient gas data available in Study 001 — no exhaust sensor for direct culture comparison. Resistance variation reflects ambient lab conditions (ventilation, lab activities) rather than E. coli metabolic output.`;
-    }
-  }
-
-  return s;
-}
-
-// ─── Study time-series chart rendering ──────────────────────────────────────
-// Reads window.STUDY_CHARTS[name] (generated by build.sh) and renders:
-//   1. A dual-axis Temperature (left y, °C) + Pressure (right y, hPa) chart
-//   2. Individual per-group charts: temperature, humidity, pressure, gas, light
-// Bad values are null in the data so Plotly shows clean gaps.
-function renderStudyCharts(name, container) {
-  const charts = (window.STUDY_CHARTS || {})[name];
-  if (!charts) {
-    const msg = document.createElement('p');
-    msg.style.cssText = 'color:var(--text-dim);font-size:.85rem;padding:4px 0 12px';
-    msg.textContent = 'No chart data — re-run build.sh to generate.';
-    container.appendChild(msg);
-    return;
-  }
-
-  const x      = charts.x;
-  const groups = charts.groups;
-
-  // Shared Plotly layout fragment for study charts (light, compact)
-  const PLY_S = {
-    paper_bgcolor: '#ffffff',
-    plot_bgcolor:  '#f6f8fa',
-    font:     { color: '#1f2328', family: 'Segoe UI, Arial, sans-serif', size: 11 },
-    legend:   { bgcolor: '#f6f8fa', bordercolor: '#d0d7de', borderwidth: 1 },
-    hovermode: 'x unified',
-    margin:   { t: 40, r: 16, b: 56, l: 68 },
-  };
-  const AX  = { type: 'date', gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' };
-  const YAX = { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' };
-
-  // ── 1. Dual-axis: Temperature (left y, °C) + Pressure (right y, hPa) ─────
-  if (groups.temperature || groups.pressure) {
-    const dualId  = `chart-temppres-${name}`;
-    const dualDiv = document.createElement('div');
-    dualDiv.className = 'chart-box study-chart-full';
-    dualDiv.id = dualId;
-    container.appendChild(dualDiv);
-
-    const dualTraces = [];
-    (groups.temperature ? groups.temperature.traces : []).forEach(t => {
-      dualTraces.push({
-        type: 'scatter', mode: 'lines', connectgaps: false,
-        name: t.name + ' (°C)', x, y: t.y,
-        line: { color: t.color, width: 1.5 },
-      });
-    });
-    (groups.pressure ? groups.pressure.traces : []).forEach(t => {
-      dualTraces.push({
-        type: 'scatter', mode: 'lines', connectgaps: false,
-        name: t.name + ' (hPa)', x, y: t.y,
-        yaxis: 'y2',
-        line: { color: t.color, width: 1.5, dash: 'dot' },
-      });
-    });
-
-    Plotly.newPlot(dualId, dualTraces, Object.assign({}, PLY_S, {
-      title:  { text: 'Temperature & Pressure', font: { color: '#1f2328', size: 13 }, x: 0.04 },
-      xaxis:  AX,
-      yaxis:  Object.assign({}, YAX, { title: { text: '°C',  font: { size: 11 } } }),
-      yaxis2: Object.assign({}, YAX, {
-        title: { text: 'hPa', font: { size: 11 } },
-        overlaying: 'y', side: 'right',
-      }),
-      margin: { t: 40, r: 72, b: 56, l: 68 },
-      height: 432,
-    }), CFG);
-
-    // Temp-pressure interpretation text (from Python-generated data)
-    const summary = (window.STUDY_SUMMARIES || {})[name];
-    const tpText  = summary && summary.interpretation && summary.interpretation.temp_pressure_text;
-    if (tpText) {
-      const tpP = document.createElement('p');
-      tpP.className = 'chart-interp-text';
-      tpP.textContent = tpText;
-      container.appendChild(tpP);
-    }
-    // Sensor context notes for dual-axis chart
-    appendChartNotes(container, name, 'temp_pres');
-  }
-
-  // ── 2. Individual parameter charts — full-width stacked ─────────────────
-  const groupOrder = ['temperature', 'humidity', 'pressure', 'gas', 'light'];
-  const drawGroups = groupOrder.filter(k => k in groups);
-  if (!drawGroups.length) return;
-
-  const grid = document.createElement('div');
-  grid.className = 'study-ts-grid';
-  container.appendChild(grid);
-
-  drawGroups.forEach(key => {
-    const g    = groups[key];
-    const id   = `chart-ts-${key}-${name}`;
-    const wrap = document.createElement('div');
-    const div  = document.createElement('div');
-    div.className = 'chart-box';
-    div.id = id;
-    wrap.appendChild(div);
-    grid.appendChild(wrap);
-
-    Plotly.newPlot(id, g.traces.map(t => ({
-      type: 'scatter', mode: 'lines', connectgaps: false,
-      name: t.name, x, y: t.y,
-      line: { color: t.color, width: 1.5 },
-    })), Object.assign({}, PLY_S, {
-      title: { text: g.title, font: { color: '#1f2328', size: 13 }, x: 0.04 },
-      xaxis: AX,
-      yaxis: Object.assign({}, YAX, { title: { text: g.unit, font: { size: 11 } } }),
-      height: 374,
-    }), CFG);
-
-    appendChartNotes(wrap, name, key);
-  });
-}
-
-function appendChartNotes(parent, studyName, groupKey) {
-  const bullets = studyGroupNotes(studyName, groupKey);
-  if (!bullets.length) return;
-  const ul = document.createElement('ul');
-  ul.className = 'chart-notes';
-  bullets.forEach(html => {
-    const li = document.createElement('li');
-    li.innerHTML = html;
-    ul.appendChild(li);
-  });
-  parent.appendChild(ul);
-}
-
-// ─── Local weather context chart ─────────────────────────────────────────────
-// Overlays ERA5 reanalysis hourly temperature + surface pressure from
-// window.WEATHER_DATA[name] on top of the study's sensor time-series.
-// Left Y: temperature (°C) — weather line + sensor traces.
-// Right Y: pressure (hPa) — weather line + sensor traces (dotted).
-function renderStudyWeather(name, block) {
-  const weather = (window.WEATHER_DATA || {})[name];
-  const charts  = (window.STUDY_CHARTS  || {})[name];
-  if (!weather || !charts) return;
-
-  // ── Section heading ──────────────────────────────────────────────────────
-  const h3 = document.createElement('h3');
-  h3.style.cssText = 'font-size:1rem;color:var(--blue);margin:32px 0 8px';
-  h3.textContent = 'Sensor Data vs. Local Weather (Moffett Field, CA)';
-  block.appendChild(h3);
-
-  const intro = document.createElement('p');
-  intro.style.cssText = 'font-size:.82rem;color:var(--text-dim);margin-bottom:12px';
-  intro.textContent =
-    'ERA5 reanalysis hourly weather (thick dashed/dotted) overlaid with sensor readings (thin solid/dotted). ' +
-    'Temperature on left axis (°C); atmospheric pressure on right axis (hPa). ' +
-    'Weather data at 1-hour resolution; sensor data downsampled to ~4 000 points.';
-  block.appendChild(intro);
-
-  // ── Chart div ────────────────────────────────────────────────────────────
-  const chartId = `weather-${name}`;
-  const chartDiv = document.createElement('div');
-  chartDiv.className = 'chart-box study-chart-full';
-  chartDiv.id = chartId;
-  block.appendChild(chartDiv);
-
-  // ── Traces ───────────────────────────────────────────────────────────────
-  const traces = [];
-  const wx = weather.time;
-
-  // ERA5 temperature (left Y) — thick grey dash-dot
-  traces.push({
-    type: 'scatter', mode: 'lines',
-    name: 'ERA5 Temperature (2 m AGL)',
-    x: wx, y: weather.temperature_2m,
-    line: { color: '#afb8c1', width: 3, dash: 'dashdot' },
-    yaxis: 'y',
-  });
-
-  // Sensor temperatures (left Y) — thin solid coloured lines
-  const tempGrp = charts.groups.temperature;
-  if (tempGrp) {
-    tempGrp.traces.forEach(t => traces.push({
-      type: 'scatter', mode: 'lines', connectgaps: false,
-      name: `${t.name} (sensor)`, x: charts.x, y: t.y,
-      line: { color: t.color, width: 1.5 },
-      yaxis: 'y',
-    }));
-  }
-
-  // ERA5 surface pressure (right Y) — thick grey dotted
-  traces.push({
-    type: 'scatter', mode: 'lines',
-    name: 'ERA5 Surface Pressure',
-    x: wx, y: weather.surface_pressure,
-    line: { color: '#8c959f', width: 3, dash: 'dot' },
-    yaxis: 'y2',
-  });
-
-  // Sensor pressures (right Y) — thin coloured dotted lines
-  const presGrp = charts.groups.pressure;
-  if (presGrp) {
-    presGrp.traces.forEach(t => traces.push({
-      type: 'scatter', mode: 'lines', connectgaps: false,
-      name: `${t.name} pressure (sensor)`, x: charts.x, y: t.y,
-      line: { color: t.color, width: 1.5, dash: 'dot' },
-      yaxis: 'y2',
-    }));
-  }
-
-  Plotly.newPlot(chartId, traces, {
-    paper_bgcolor: '#ffffff', plot_bgcolor: '#f6f8fa',
-    font:     { color: '#1f2328', family: 'Segoe UI, Arial, sans-serif', size: 11 },
-    legend:   { bgcolor: '#f6f8fa', bordercolor: '#d0d7de', borderwidth: 1,
-                orientation: 'h', x: 0, xanchor: 'left', y: -0.18, yanchor: 'top' },
-    hovermode: 'x unified',
-    title:    { text: 'Sensor Data vs. ERA5 Local Weather — Temperature & Pressure',
-                font: { color: '#1f2328', size: 13 }, x: 0.04 },
-    xaxis:    { type: 'date', gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' },
-    yaxis:    { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76',
-                title: { text: '°C', font: { size: 11 } } },
-    yaxis2:   { gridcolor: '#e1e4e8', zeroline: false, color: '#8c959f',
-                title: { text: 'hPa', font: { size: 11 } },
-                overlaying: 'y', side: 'right' },
-    margin:   { t: 44, r: 80, b: 100, l: 68 },
-    height:   460,
-  }, CFG);
-
-  // ── Source / attribution notes ────────────────────────────────────────────
-  const noteUl = document.createElement('ul');
-  noteUl.className = 'chart-notes';
-  [
-    '<b>Weather data source:</b> ERA5 global atmospheric reanalysis, accessed via the ' +
-    '<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo Historical Weather API</a> ' +
-    '(free, open-source, no API key required). ERA5 is produced by the European Centre for Medium-Range Weather ' +
-    'Forecasts (ECMWF) and distributed under CC&nbsp;BY&nbsp;4.0. ' +
-    'Reference: Hersbach H. et al. (2020). The ERA5 global reanalysis. ' +
-    '<em>Q. J. R. Meteorol. Soc.</em>, 146(730), 1999–2049. ' +
-    '<a href="https://doi.org/10.1002/qj.3803" target="_blank" rel="noopener">DOI: 10.1002/qj.3803</a>',
-
-    '<b>Location:</b> Nearest ERA5 grid point to Moffett Federal Airfield, Mountain View, CA, USA ' +
-    '(37.4161°N, 122.0477°W). ERA5 horizontal resolution ≈ 31 km (0.25° grid). ' +
-    'For higher-resolution hourly station observations from the Automated Surface Observing System ' +
-    '(ASOS) at KNUQ (Moffett Federal Airfield), see ' +
-    '<a href="https://www.ncei.noaa.gov/cdo-web/" target="_blank" rel="noopener">NOAA Climate Data Online</a> ' +
-    'or the <a href="https://mesonet.agron.iastate.edu/request/download.phtml?network=CA_ASOS" ' +
-    'target="_blank" rel="noopener">Iowa Environmental Mesonet ASOS archive (station KNUQ)</a>.',
-
-    '<b>Variables:</b> <em>temperature_2m</em> — air temperature at 2 m above ground level (°C). ' +
-    '<em>surface_pressure</em> — atmospheric pressure at the surface (hPa), equivalent to station pressure ' +
-    'corrected for the ERA5 model orography. ERA5 pressure is not reduced to sea level (unlike MSLP); ' +
-    'it represents local station pressure at grid-point elevation. ' +
-    'Sensor pressures (BME688 MEMS, absolute, ±0.6 hPa) should agree closely with ERA5 surface pressure ' +
-    'if both are at similar elevations above sea level.',
-
-    '<b>Temporal resolution:</b> ERA5 data is hourly; bioreactor sensor data is logged at 1 Hz and ' +
-    'downsampled to ~4 000 points per study for display. ERA5 temperature will appear smooth relative to ' +
-    'sensor data, which captures short-duration HVAC cycling, door-opening transients, and sensor start-up ' +
-    'artefacts not visible in the 1-hour weather record.',
-  ].forEach(html => {
-    const li = document.createElement('li');
-    li.innerHTML = html;
-    noteUl.appendChild(li);
-  });
-  block.appendChild(noteUl);
-}
-
-// ─── Sensor cross-correlation scatter plots ──────────────────────────────────
-// One square chart per measurement group.  Every unique sensor pair in the group
-// is a separate trace on the same axes so the legend can toggle each combination
-// on/off.  Both axes share one range computed from all valid data across all pairs;
-// the 1:1 dashed line spans the full diagonal for groups where sensors measure the
-// same physical quantity (temperature, humidity, pressure).
-function renderStudyScatter(name, block, charts) {
-  const groups     = charts.groups || {};
-  const groupOrder = ['temperature', 'humidity', 'pressure', 'gas'];
-  const SAT_MAX    = { humidity: 99.9 };
-  const SHOW_1TO1  = new Set(['temperature', 'humidity', 'pressure']);
-  // Figure geometry: plot area is a square; legend sits in the right margin.
-  // SQ_H = total figure height; MARG drives the plot-area square size.
-  // figure width = plot_area_side + l + r  →  rectangular figure, square plot area.
-  const MARG     = { t: 50, r: 165, b: 70, l: 80 };
-  const SQ_H     = 560;
-  const PLOT_SZ  = SQ_H - MARG.t - MARG.b;   // 440 px — square plot-area side
-  const SQ_W     = PLOT_SZ + MARG.l + MARG.r; // 685 px — total figure width
-
-  // Distinct marker colors per pair index so combinations are visually separable
-  const PAIR_COLORS = ['#0969da', '#cf222e', '#1a7f37', '#8250df', '#9a6700'];
-
-  const PLY_SC = {
-    paper_bgcolor: '#ffffff', plot_bgcolor: '#f6f8fa',
-    font:   { color: '#1f2328', family: 'Segoe UI, Arial, sans-serif', size: 11 },
-    legend: { bgcolor: '#f6f8fa', bordercolor: '#d0d7de', borderwidth: 1,
-              orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top' },
-    hovermode: 'closest',
-    width: SQ_W, height: SQ_H,
-    margin: MARG,
-  };
-  const AX = { gridcolor: '#e1e4e8', zeroline: false, color: '#636c76' };
-
-  let anyPair = false;
-  groupOrder.forEach(key => {
-    const g = groups[key];
-    if (!g || g.traces.length < 2) return;
-    anyPair = true;
-  });
-  if (!anyPair) return;
-
-  const h3 = document.createElement('h3');
-  h3.style.cssText = 'font-size:1rem;color:var(--blue);margin:32px 0 8px';
-  h3.textContent = 'Sensor Cross-Correlation';
-  block.appendChild(h3);
-
-  const note = document.createElement('p');
-  note.style.cssText = 'font-size:.82rem;color:var(--text-dim);margin-bottom:14px';
-  note.textContent =
-    'All sensor pairs for each measurement group on one chart. Valid simultaneous ' +
-    'readings only — nulls and saturated values excluded. Both axes share the same ' +
-    'range. Dashed 1:1 line = perfect agreement. Click legend entries to toggle ' +
-    'individual pairs. Offset from 1:1 indicates sensor bias or placement effect.';
-  block.appendChild(note);
-
-  const grid = document.createElement('div');
-  grid.className = 'scatter-grid';
-  block.appendChild(grid);
-
-  groupOrder.forEach(key => {
-    const g = groups[key];
-    if (!g || g.traces.length < 2) return;
-    const satMax = SAT_MAX[key] !== undefined ? SAT_MAX[key] : Infinity;
-
-    // Collect all pairs and their data first, then compute global axis range
-    const pairs = [];
-    for (let i = 0; i < g.traces.length - 1; i++) {
-      for (let j = i + 1; j < g.traces.length; j++) {
-        const tA = g.traces[i], tB = g.traces[j];
-        const xSc = [], ySc = [];
-        for (let k = 0; k < tA.y.length; k++) {
-          const va = tA.y[k], vb = tB.y[k];
-          if (va === null || vb === null) continue;
-          if (va >= satMax || vb >= satMax) continue;
-          xSc.push(va);
-          ySc.push(vb);
-        }
-        if (xSc.length >= 10) pairs.push({ tA, tB, xSc, ySc });
-      }
-    }
-    if (!pairs.length) return;
-
-    // Global axis range from all valid values across all pairs
-    const allV = pairs.flatMap(p => [...p.xSc, ...p.ySc]);
-    const vmin  = Math.min(...allV);
-    const vmax  = Math.max(...allV);
-    const pad   = (vmax - vmin) * 0.05 || 1;
-    const axRange = [vmin - pad, vmax + pad];
-
-    const id   = `sc-${key}-${name}`;
-    const wrap = document.createElement('div');
-    wrap.style.cssText = `width:${SQ_W}px`;
-    const div = document.createElement('div');
-    div.className = 'chart-box scatter-sq';
-    div.id = id;
-    div.style.width  = SQ_W + 'px';
-    div.style.height = SQ_H + 'px';
-    wrap.appendChild(div);
-    grid.appendChild(wrap);
-
-    // One trace per pair, plus optional 1:1 reference line
-    const pTraces = pairs.map(({ tA, tB, xSc, ySc }, idx) => ({
-      type: 'scatter', mode: 'markers',
-      name: `${tA.name} vs ${tB.name}`,
-      x: xSc, y: ySc,
-      marker: { color: PAIR_COLORS[idx % PAIR_COLORS.length], size: 3, opacity: 0.5 },
-      showlegend: true,
-    }));
-
-    if (SHOW_1TO1.has(key)) {
-      pTraces.push({
-        type: 'scatter', mode: 'lines', name: '1:1 reference',
-        x: axRange, y: axRange,
-        line: { color: '#636c76', width: 1.5, dash: 'dash' },
-        showlegend: true,
-      });
-    }
-
-    Plotly.newPlot(id, pTraces, Object.assign({}, PLY_SC, {
-      title: {
-        text: `${g.title} — all sensor pairs`,
-        font: { color: '#1f2328', size: 13 }, x: 0.04,
-      },
-      xaxis: Object.assign({}, AX, {
-        range: axRange,
-        title: { text: g.unit, font: { size: 11 } },
-      }),
-      yaxis: Object.assign({}, AX, {
-        range: axRange,
-        title: { text: g.unit, font: { size: 11 } },
-      }),
-    }), { responsive: false, displayModeBar: true, displaylogo: false });
-
-    // Interpretation text below each scatter chart — computed from the data
-    const interpUl = document.createElement('ul');
-    interpUl.className = 'scatter-interp';
-    pairs.forEach(({ tA, tB, xSc, ySc }) => {
-      const st = computeScatterStats(xSc, ySc);
-      if (!st) return;
-      const li = document.createElement('li');
-      li.innerHTML = buildScatterText(key, tA, tB, st, g.unit, name);
-      interpUl.appendChild(li);
-    });
-    wrap.appendChild(interpUl);
-  });
-}
-
-// ── Run after DOM + study JS files are loaded ─────────────────────────────────
-renderAllStudies();
 </script>
 
 </body>

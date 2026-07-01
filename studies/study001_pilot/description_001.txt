@@ -1,0 +1,10 @@
+A liquid culture of fungus innoculated into a bag of sterilie substrate
+
+Loaded and outfitted with sensors on 
+June 30 5:00pm
+
+SHT30 and BME688 #1 outside the bag on the table next to the bag for environment 
+BME688 #2 inside the bag 
+Light sensor under the bag with strong illumination (illumination that without the bag would max out the sensor at 1000 across all channels) 
+
+
