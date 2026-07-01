@@ -79,7 +79,7 @@ Wire.h is built-in.
 
 SYSTEM BEHAVIOR
 ----------------
-- Logs every 1 second
+- Logs every 3 seconds
 - Generates timestamp from internal millis() clock
 - Controls pump using ON/OFF cycle timing
 - Reads all sensors sequentially
@@ -328,7 +328,7 @@ void loop() {
   );
 
   // LOGGING
-  if (millis() - lastLog >= 1000) {
+  if (millis() - lastLog >= 3000) {
 
     unsigned long uptime_s = millis() / 1000;
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# build.sh — astroPharmReactor data pipeline
+# build.sh — mycoSupervised data pipeline
 # =============================================================================
 #
 # PURPOSE
@@ -32,8 +32,7 @@
 #   PYTHON=python3.11 bash build.sh
 #
 # OUTPUT FILES
-#   docs/js/study001_ecoli.js
-#   docs/js/study002_ecoli.js
+#   docs/js/study001_pilot.js
 #   (one JS file per study* folder found under studies/)
 #
 # DEPENDENCIES
@@ -52,7 +51,7 @@ PYTHON="${PYTHON:-python3}"
 # ── Banner ────────────────────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║     astroPharmReactor  —  build          ║"
+echo "║     mycoSupervised  —  build             ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 echo "  Repo  : $REPO_ROOT"

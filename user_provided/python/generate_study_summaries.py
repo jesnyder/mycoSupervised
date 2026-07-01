@@ -2,7 +2,7 @@
 """
 generate_study_summaries.py
 Generated: 2026-06-17
-Author: astroPharmReactor project
+Author: mycoSupervised project
 
 OBJECTIVE
 ---------
@@ -21,32 +21,33 @@ Running this script regenerates the entire website data layer:
 STUDY FOLDER DISCOVERY
 -----------------------
 The script looks for study* directories directly under studies/ (repo root):
-  - studies/study001_ecoli/   (SHT30 only → SHT30+BME688)
-  - studies/study002_ecoli/   (SHT30+2×BME688 → +AS7341 4ch → +AS7341 8ch)
+  - studies/study001_pilot/   (fungal culture inoculated into a sterile substrate bag)
 
 COLUMN NAME EVOLUTION (schema history)
 ---------------------------------------
-The Python logging scripts were written incrementally as sensors were added.
-Each iteration changed column names.  This script maps all historical names
-to a single canonical set so stats and charts span the full study timeline.
+The Python logging scripts were written incrementally, on a prior project
+using this same rig, as sensors were added.  Each iteration changed column
+names.  This script maps all historical names to a single canonical set so
+stats and charts span the full study timeline even if older schema versions
+reappear in future studies.
 
-  Schema A  (SHT30 only — early study001):
+  Schema A  (SHT30 only):
     timestamp, elapsed_s, temperature_C, humidity_pct, speed_pct
 
-  Schema B  (SHT30 + 1× BME688 — later study001, two study002 files):
+  Schema B  (SHT30 + 1× BME688):
     timestamp, elapsed_s, sht30_temp_C, sht30_humidity_pct,
     bme688_temp_C, bme688_humidity_pct, bme688_pressure_hpa,
     bme688_gas_ohms, motor_speed_pct
 
-  Schema C  (SHT30 + 2× BME688 — study002, no light sensor):
+  Schema C  (SHT30 + 2× BME688, no light sensor):
     pc_timestamp, elapsed_s, arduino_date, arduino_time, uptime_s,
     sht30_temp_C, sht30_humidity_pct,
     bme688_1_*, bme688_2_*, stepper_speed_pct, pump_speed_pct, pump_state
 
-  Schema D  (SHT30 + 2× BME688 + AS7341 4-channel — study002):
+  Schema D  (SHT30 + 2× BME688 + AS7341 4-channel):
     Schema C + as7341_f1..f4, as7341_clear, as7341_nir
 
-  Schema E  (SHT30 + 2× BME688 + AS7341 8-channel — study002 latest):
+  Schema E  (SHT30 + 2× BME688 + AS7341 8-channel — study001_pilot):
     Schema C + as7341_f1..f8, as7341_clear, as7341_nir
 
 Canonical column aliases (COL_ALIASES):
@@ -148,8 +149,8 @@ Each file sets two globals:
     }
   };
 
-docs/index.html loads these JS files and renders interactive Tabulator tables,
-a session-timeline Plotly chart, a bad-data duration chart, and per-group
+docs/<study_name>.html loads these JS files and renders interactive Tabulator
+tables, a session-timeline Plotly chart, a bad-data duration chart, and per-group
 time-series Plotly charts for each study.
 
 DEPENDENCIES
@@ -556,12 +557,20 @@ def build_chart_data(sessions):
 # ── Experiment description ───────────────────────────────────────────────────
 
 def read_description(study_dir):
-    """Return text of description.txt from study_dir, or None if absent."""
-    path = os.path.join(study_dir, 'description.txt')
-    if not os.path.exists(path):
-        return None
-    with open(path, encoding='utf-8') as fh:
-        return fh.read().strip() or None
+    """
+    Return text of the study's description file, or None if absent.
+    Looks for description.txt first, then falls back to any description*.txt
+    (e.g. description_001.txt) so per-session numbered description files work too.
+    """
+    candidates = [os.path.join(study_dir, 'description.txt')]
+    candidates += sorted(glob.glob(os.path.join(study_dir, 'description*.txt')))
+    for path in candidates:
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as fh:
+                text = fh.read().strip()
+            if text:
+                return text
+    return None
 
 
 # ── Data interpretation ───────────────────────────────────────────────────────
@@ -651,8 +660,8 @@ def generate_interpretation(sessions, variable_stats):
         mean_h = hs['mean']
         if mean_h > 80:
             bullets.append(
-                f"Mean humidity was high ({mean_h:.0f}% RH), expected in a bioreactor "
-                f"environment where media evaporation and culture respiration raise moisture levels."
+                f"Mean humidity was high ({mean_h:.0f}% RH), expected inside a substrate "
+                f"bag where evaporation and fungal respiration raise moisture levels."
             )
 
     # ── Gas resistance / culture proxy ───────────────────────────────────
@@ -728,8 +737,8 @@ def generate_interpretation(sessions, variable_stats):
         dev     = abs(mean_p - 1013.25)
 
         p1 = (
-            f"This bioreactor is an open vessel, so pressure is governed by local atmospheric "
-            f"conditions rather than culture temperature or activity. "
+            f"Pressure is governed by local atmospheric conditions rather than substrate "
+            f"temperature or activity. "
             f"{ps['label']} averaged {mean_p:.1f} hPa (range: {range_p:.1f} hPa) — "
         )
         p1 += (
