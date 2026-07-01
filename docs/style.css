@@ -1,0 +1,398 @@
+/* =============================================================================
+   style.css — astroPharmReactor docs site
+   Last updated: 2026-06-17
+   ============================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #ffffff;
+  --surface:  #f6f8fa;
+  --border:   #d0d7de;
+  --border2:  #afb8c1;
+  --text:     #1f2328;
+  --text-dim: #636c76;
+  --blue:     #0969da;
+  --green:    #1a7f37;
+  --orange:   #cf222e;
+  --yellow:   #9a6700;
+  --purple:   #8250df;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* ── Header ── */
+header {
+  background: linear-gradient(135deg, #f0f3f6 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border2);
+  padding: 48px 32px 32px;
+  text-align: center;
+}
+header h1 { font-size: 2.6rem; color: var(--blue); letter-spacing: 1px; margin-bottom: 10px; }
+header .subtitle { font-size: 1.05rem; color: var(--text-dim); max-width: 680px; margin: 0 auto 14px; }
+header .date { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 24px; }
+
+/* ── Nav ── */
+nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 28px;
+  background: linear-gradient(135deg, #f0f3f6 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border2);
+}
+nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.88rem;
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  transition: color .15s, border-color .15s;
+}
+nav a:hover { color: var(--blue); border-color: var(--blue); }
+
+/* ── Layout ── */
+main { max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; }
+section { margin-bottom: 60px; }
+
+h2 {
+  font-size: 1.35rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 22px;
+}
+h3 { font-size: 1rem; color: var(--blue); margin: 28px 0 10px; }
+p  { color: var(--text); margin-bottom: 14px; }
+
+/* ── Cards ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.card .label { font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.card .value { font-size: 1.05rem; color: var(--text); font-weight: 600; }
+
+/* ── Chips ── */
+.chip {
+  display: inline-block;
+  background: #ddf4ff;
+  color: var(--blue);
+  border: 1px solid #54aeff;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 0.82rem;
+  margin: 3px 4px 3px 0;
+}
+
+/* ── Code blocks ── */
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.88rem;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+code {
+  background: var(--surface);
+  color: #0550ae;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.88em;
+}
+
+/* ── Table controls (download button row) ── */
+.tbl-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.btn:hover { border-color: var(--blue); color: var(--blue); }
+.btn svg { width: 14px; height: 14px; fill: currentColor; }
+.tbl-wrapper { margin-bottom: 32px; }
+
+/* ── Tabulator overrides — light theme ── */
+.tabulator { border-radius: 6px; border: 1px solid var(--border) !important; font-size: 0.9rem; }
+.tabulator .tabulator-header .tabulator-col { background: #eaeef2 !important; color: var(--text) !important; }
+.tabulator-row.tabulator-row-even { background: #ffffff !important; }
+.tabulator-row.tabulator-row-odd  { background: #f6f8fa !important; }
+.tabulator-row:hover .tabulator-cell { background: #e8ecf0 !important; }
+.tabulator .tabulator-header { border-bottom: 1px solid var(--border2) !important; }
+.tabulator-cell { color: var(--text) !important; }
+.tabulator .tabulator-col-title { color: var(--text) !important; }
+
+/* ── File drop zone ── */
+.drop-zone {
+  border: 2px dashed var(--border2);
+  border-radius: 10px;
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  margin-bottom: 24px;
+  background: var(--surface);
+}
+.drop-zone.hover { border-color: var(--blue); background: #dff0ff; }
+.drop-zone .drop-icon { font-size: 2.2rem; margin-bottom: 10px; }
+.drop-zone p { color: var(--text-dim); margin: 0; font-size: 0.95rem; }
+.drop-zone p span { color: var(--blue); text-decoration: underline; cursor: pointer; }
+#file-input { display: none; }
+
+/* ── Status bar (shown after CSV load) ── */
+.status-bar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 0.88rem;
+}
+.status-bar.visible { display: flex; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.status-bar .clear-btn { margin-left: auto; }
+
+/* ── Chart grid (CSV visualizer) — single column ── */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.chart-grid .chart-full { grid-column: 1; }
+.chart-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  min-height: 403px;
+}
+
+.placeholder-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ── Study summary blocks ── */
+.study-block {
+  background: #f0f3f6;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px 24px 18px;
+  margin-bottom: 28px;
+}
+.study-header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.study-title {
+  font-size: 1.15rem;
+  color: var(--text);
+  margin: 0;
+  text-transform: capitalize;
+}
+.study-gen { font-size: .76rem; color: var(--text-dim); }
+.study-cards {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  margin-bottom: 16px !important;
+}
+.study-cards .value { font-size: .95rem !important; }
+.study-cards .sval  { font-size: .80rem !important; }
+.study-chart-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.study-chart-row .chart-box { min-height: 0; }
+#studies-empty {
+  text-align: center;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  color: var(--text-dim);
+}
+
+/* ── Study time-series charts — full-width stacked ── */
+.study-chart-full {
+  margin-bottom: 14px;
+}
+.study-ts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+  margin-bottom: 18px;
+}
+.study-ts-grid .chart-box { width: 100%; }
+
+/* ── Study description and interpretation ── */
+.study-description {
+  background: #edf4fb;
+  border-left: 3px solid var(--blue);
+  border-radius: 0 6px 6px 0;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: .92rem;
+  color: var(--text);
+  line-height: 1.7;
+}
+.chart-interp-text {
+  font-size: .88rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.75;
+  margin: 10px 4px 20px;
+}
+.interp-list {
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+.interp-list li {
+  font-size: .9rem;
+  color: var(--text);
+  line-height: 1.75;
+  margin-bottom: 8px;
+}
+
+/* ── Per-chart sensor notes ── */
+.chart-notes {
+  list-style: disc;
+  padding-left: 22px;
+  margin: 8px 4px 20px;
+}
+.chart-notes li {
+  font-size: .85rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-bottom: 6px;
+}
+.chart-notes li b { color: var(--text); }
+
+/* ── Sensor scatter comparison — centered square plots ── */
+.scatter-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.scatter-sq {
+  min-height: unset !important;
+  flex-shrink: 0;
+}
+
+/* ── Physics section ── */
+#physics pre {
+  font-size: .85rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+#physics h3 { margin-top: 32px; }
+
+/* ── Literature section ── */
+.lit-list {
+  padding-left: 22px;
+  margin-bottom: 22px;
+}
+.lit-list li {
+  margin-bottom: 18px;
+  line-height: 1.7;
+  font-size: .92rem;
+}
+.lit-list li a {
+  color: var(--blue);
+  text-decoration: none;
+  font-size: .85rem;
+  display: inline-block;
+  margin-top: 2px;
+}
+.lit-list li a:hover { text-decoration: underline; }
+.lit-note {
+  display: block;
+  font-size: .82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 4px;
+  line-height: 1.55;
+}
+
+/* ── Future work ── */
+.future-item {
+  background: var(--surface);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 6px 6px 0;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+.future-item strong { color: var(--text); }
+
+/* ── Scatter interpretation notes (below each cross-correlation chart) ── */
+.scatter-interp {
+  list-style: disc;
+  padding: 8px 8px 6px 22px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+.scatter-interp li {
+  font-size: .85rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+.scatter-interp li b { color: var(--text); }
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  border-top: 1px solid var(--border);
+  padding: 24px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}

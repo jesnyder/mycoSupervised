@@ -1,0 +1,7 @@
+Sensor ID	I2C Address	SDO Pin State	VCC	GND	SDA	SCL	Notes
+BME688 #1	0x76	SDO → GND	3.3V or 5V (module dependent)	GND	Arduino SDA (A4 / SDA pin)	Arduino SCL (A5 / SCL pin)	Default address when SDO is pulled LOW
+BME688 #2	0x77	SDO → VCC (3.3V)	3.3V or 5V (module dependent)	GND	Same SDA bus	Same SCL bus	Alternate address when SDO is pulled HIGH
+
+
+By reactor vent is blue wire from sensor SDO to 3V pin - BME688 #2 
+On breadboard is SDO to Ground - BME #1 
