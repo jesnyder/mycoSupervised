@@ -71,6 +71,33 @@
 <script>
 const CFG = { responsive: true, displayModeBar: true, displaylogo: false };
 
+// ─── Figure / table numbering ────────────────────────────────────────────────
+// Two independent, page-wide sequential counters (figures and tables are
+// numbered separately). Labels are assigned in document order as each
+// chart/table is rendered, which matches reading order top-to-bottom.
+let __figureNum = 0;
+let __tableNum  = 0;
+const nextFigureLabel = () => `Figure ${++__figureNum}`;
+const nextTableLabel  = () => `Table ${++__tableNum}`;
+
+// Fills a pre-placed empty caption element (created via template markup as
+// <div class="item-caption" id="cap-...">) with a numbered label + text.
+function setCaption(id, label, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<strong>${label}.</strong> ${text}`;
+}
+
+// Creates and appends a caption element to `parent` (used where the chart/
+// table itself was built with document.createElement rather than a static
+// template string).
+function appendCaption(parent, label, text) {
+  const cap = document.createElement('div');
+  cap.className = 'item-caption';
+  cap.innerHTML = `<strong>${label}.</strong> ${text}`;
+  parent.appendChild(cap);
+  return cap;
+}
+
 // ─── Study Summary Rendering ─────────────────────────────────────────────────
 // Reads window.STUDY_SUMMARIES populated by docs/js/study*.js (loaded above).
 // Renders for each study:
@@ -135,15 +162,30 @@ function renderStudy(container, data) {
     </div>
 
     <div class="study-chart-row">
-      <div class="chart-box" id="timeline-${name}" style="height:${chartH}px"></div>
-      <div class="chart-box" id="baddata-${name}"  style="height:${chartH}px"></div>
+      <div>
+        <div class="chart-box" id="timeline-${name}" style="height:${chartH}px"></div>
+        <div class="item-caption" id="cap-timeline-${name}"></div>
+      </div>
+      <div>
+        <div class="chart-box" id="baddata-${name}"  style="height:${chartH}px"></div>
+        <div class="item-caption" id="cap-baddata-${name}"></div>
+      </div>
     </div>
 
+    <div class="item-caption" id="cap-stats-${name}" style="margin:6px 2px 8px"></div>
     <div class="tbl-controls">
       <button class="btn" id="dl-stats-${name}">${DL_ICON} Download CSV</button>
       <span style="color:var(--text-dim);font-size:.85rem">${varCount} variables</span>
     </div>
     <div id="table-stats-${name}"></div>
+
+    <div class="item-caption" id="cap-regression-${name}" style="margin:24px 2px 8px"></div>
+    <div class="tbl-controls">
+      <button class="btn" id="dl-regression-${name}">${DL_ICON} Download CSV</button>
+      <span style="color:var(--text-dim);font-size:.85rem">${varCount} variables</span>
+    </div>
+    <div id="table-regression-${name}"></div>
+    <div class="method-note" id="method-note-${name}"></div>
   `;
   container.appendChild(block);
 
@@ -194,6 +236,90 @@ function renderStudy(container, data) {
     statsTbl.download('csv', `${name}_variable_stats.csv`);
   });
 
+  setCaption(`cap-stats-${name}`, nextTableLabel(),
+    'Per-variable summary statistics — valid/bad row counts, bad-data duration and cause, ' +
+    'and min / max / range / mean over all valid readings.');
+
+  // ── Tabulator: trend, diurnal-cycle & best-fit-model table ────────────────
+  const trendData = Object.entries(vars).map(([col, v]) => ({
+    variable: v.label || col,
+    unit:     v.unit,
+    slope:    v.slope_per_hour,
+    r:        v.trend_r,
+    diurnal:  v.diurnal_fit,
+    model:    v.best_fit_model,
+  }));
+
+  const fmtSlope = cell => {
+    const row = cell.getRow().getData();
+    const v = cell.getValue();
+    return (v !== null && v !== undefined) ? `${v} ${row.unit}/h` : '—';
+  };
+  const fmtR = cell => {
+    const v = cell.getValue();
+    return (v !== null && v !== undefined) ? v.toFixed(4) : '—';
+  };
+  const fmtDiurnal = cell => {
+    const v = cell.getValue();
+    if (v === null || v === undefined) return '—';
+    return v
+      ? '<span style="color:var(--green);font-weight:600">Yes</span>'
+      : '<span style="color:var(--text-dim)">No</span>';
+  };
+  const fmtModel = cell => {
+    const v = cell.getValue();
+    return v ? v : '<span style="color:var(--text-dim)">None</span>';
+  };
+
+  const regressionTbl = new Tabulator(`#table-regression-${name}`, {
+    data: trendData,
+    layout: 'fitColumns',
+    headerSort: true,
+    initialSort: [{ column: 'variable', dir: 'asc' }],
+    columns: [
+      { title: 'Variable',          field: 'variable', headerSort: true,  widthGrow: 2 },
+      { title: 'Unit',               field: 'unit',     headerSort: true,  width: 80 },
+      { title: 'Slope',              field: 'slope',    headerSort: true,  sorter: 'number', hozAlign: 'right', widthGrow: 1, formatter: fmtSlope },
+      { title: 'r',                  field: 'r',        headerSort: true,  sorter: 'number', hozAlign: 'right', width: 90, formatter: fmtR },
+      { title: 'Diurnal Fit',        field: 'diurnal',  headerSort: true,  hozAlign: 'center', width: 110, formatter: fmtDiurnal },
+      { title: 'Best-Fit Model',     field: 'model',    headerSort: true,  widthGrow: 1, formatter: fmtModel },
+    ],
+  });
+
+  document.getElementById(`dl-regression-${name}`).addEventListener('click', () => {
+    regressionTbl.download('csv', `${name}_trend_regression.csv`);
+  });
+
+  setCaption(`cap-regression-${name}`, nextTableLabel(),
+    'Linear-regression trend, 24-hour diurnal-cycle fit, and best-fitting functional form per ' +
+    'variable, computed from valid (non-bad) readings only.');
+
+  document.getElementById(`method-note-${name}`).innerHTML = `
+    <p>
+      <strong>Slope &amp; r:</strong> ordinary-least-squares linear regression of each variable
+      against elapsed time (hours). Slope is the average rate of change (unit/hour); r is the
+      Pearson correlation coefficient (&minus;1 to 1) — its magnitude indicates how well a
+      straight line fits the data and its sign gives the direction of the trend. Shown as “—” when
+      fewer than 3 valid readings are available.
+    </p>
+    <p>
+      <strong>Diurnal fit:</strong> a 24-hour sinusoid (sin/cos pair) is fit to the data by least
+      squares; “Yes” means that cycle explains a meaningful share of the variable's variance
+      (R²&nbsp;≥&nbsp;0.15), “No” means it does not. This is a heuristic screen, not a formal
+      significance test, and Study&nbsp;001's ~19&nbsp;h run is shorter than a full day, so results
+      here are exploratory.
+    </p>
+    <p>
+      <strong>Best-fit model:</strong> Linear, Exponential Growth/Decay, Logarithmic, and Power-law
+      curves are each fit to the data and compared on R² in the variable's original units; the
+      best-fitting form is reported if it explains at least 30% of the variance, otherwise “None”.
+    </p>
+    <p>
+      Full derivations, formulas, and reasoning behind each threshold:
+      <a href="index.html#trend-methods">About page — Trend, Diurnal &amp; Model-Fit Regression Analysis</a>.
+    </p>
+  `;
+
   // ── Plotly: session timeline ───────────────────────────────────────────────
   // One thick horizontal line per session; gaps visible as whitespace.
   const timeTraces = t.sessions.map((s, i) => ({
@@ -223,6 +349,10 @@ function renderStudy(container, data) {
     margin:   { t: 40, r: 12, b: 44, l: 44 },
     height:   chartH,
   }, CFG);
+
+  setCaption(`cap-timeline-${name}`, nextFigureLabel(),
+    'Session timeline — start/end and duration of each logging session (one coloured band per ' +
+    'CSV file); whitespace between bands indicates a logging gap.');
 
   // ── Plotly: bad-data duration bar chart ───────────────────────────────────
   // Horizontal orange bars — one per variable that has bad rows — sorted by
@@ -271,6 +401,10 @@ function renderStudy(container, data) {
       height:   chartH,
     }, CFG);
   }
+
+  setCaption(`cap-baddata-${name}`, nextFigureLabel(),
+    'Bad / out-of-range reading duration per sensor variable (seconds spent flagged nan, ' +
+    'below-min, or above-max), sorted descending.');
 
   // ── Study time-series charts (from window.STUDY_CHARTS) ───────────────────
   const tsH = document.createElement('h3');
@@ -383,6 +517,10 @@ function renderStudyDataExport(name, block, charts) {
   expH.textContent   = 'Data Export';
   block.appendChild(expH);
 
+  appendCaption(block, nextTableLabel(),
+    'Downsampled wide-format time series — one row per timestamp, one column per sensor trace. ' +
+    'Paginated preview; full data available via CSV download.');
+
   // Controls row
   const ctrl = document.createElement('div');
   ctrl.className = 'tbl-controls';
@@ -479,7 +617,8 @@ function studyGroupNotes(studyName, groupKey) {
 
     // ── Light spectrum time-series chart ──────────────────────────────────
     light: [
-      '<b>AS7341 Spectral Sensor:</b> CMOS-based 11-channel spectral sensor (AMS-OSRAM AS7341). Narrowband optical interference filters are deposited directly on-chip above individual silicon photodiodes to isolate specific wavelength bands (~30–40 nm FWHM each). Each photodiode converts photons to charge accumulated in a 16-bit ADC (0–65535 counts; 65535 = saturated). Channels: F1 (415 nm, violet), F2 (445 nm, indigo), F3 (480 nm, blue), F4 (515 nm, cyan-green), F5 (555 nm, green), F6 (590 nm, amber), F7 (630 nm, orange-red), F8 (680 nm, red), CLEAR (broadband 380–700 nm), NIR (~855 nm). ' + as7341Ref,
+      '<b>AS7341 Spectral Sensor:</b> CMOS-based 11-channel spectral sensor (AMS-OSRAM AS7341). Narrowband optical interference filters are deposited directly on-chip above individual silicon photodiodes to isolate specific wavelength bands (~30–40 nm FWHM each). Each photodiode converts photons to charge accumulated in a 16-bit ADC (0–65535 counts; 65535 = saturated). Full channel set: F1 (415 nm, violet), F2 (445 nm, indigo), F3 (480 nm, blue), F4 (515 nm, cyan-green), F5 (555 nm, green), F6 (590 nm, amber), F7 (630 nm, orange-red), F8 (680 nm, red), CLEAR (broadband 380–700 nm), NIR (~855 nm). ' + as7341Ref,
+      '<b>Only 6 of 10 channels logged (Study 001):</b> The physical AS7341 die exposes at most 6 ADC channels per measurement cycle, so DFRobot\'s library splits access into two modes — Mode 1 (F1–F4 + CLEAR + NIR) and Mode 2 (F5–F8 + CLEAR + NIR). This study\'s firmware calls <code>startMeasure(DFRobot_AS7341::eF1F4ClearNIR)</code> and <code>readSpectralDataOne()</code> only — Mode 2 is never invoked. <b>F5–F8 were never measured for Study 001</b>; every chart, table, and CSV export on this page reflects only F1–F4, CLEAR, and NIR. This is a firmware limitation, not a data-processing or logging error — see the <a href="index.html#hardware">About page — Hardware</a> section for the corrected sensor description.',
       '<b>Output scale — 0 to 1000, not raw 16-bit:</b> The DFRobot_AS7341 library used in this firmware outputs normalized channel values on a <b>0–1000 scale</b>, not raw 16-bit ADC counts (0–65535). A reading of exactly 1000 means the channel is at the library\'s full-scale ceiling — the internal ADC has saturated for the current gain and integration time settings. The pipeline\'s saturation filter flags values ≥ 1000 as <code>above_max</code>.',
       '<b>Placement as a colonization proxy:</b> The sensor sits under the bag, beneath a light source strong enough to saturate every channel (1000 counts) if the bag were not attenuating it. As the fungus colonizes the substrate and the bag interior fills with white mycelium, transmitted light reaching the sensor is expected to fall — a lower, falling reading is the hypothesized colonization signal. This is a hypothesis to be checked against periodic photos of the bag, not an established result.',
       '<b>Ambient light contamination:</b> Without a fully controlled illumination setup, any change in the external light source (lamp switching, dimming, repositioning) will change every channel and can be mistaken for a colonization signal. Keeping the illumination geometry and intensity fixed across the study is important for the light channel to be interpretable as a colonization proxy rather than a room-lighting log.',
@@ -632,6 +771,9 @@ function renderStudyCharts(name, container) {
       height: 432,
     }), CFG);
 
+    appendCaption(container, nextFigureLabel(),
+      'Temperature (left axis, °C) and pressure (right axis, hPa) time series, all sensors overlaid.');
+
     // Temp-pressure interpretation text (from Python-generated data)
     const summary = (window.STUDY_SUMMARIES || {})[name];
     const tpText  = summary && summary.interpretation && summary.interpretation.temp_pressure_text;
@@ -675,6 +817,7 @@ function renderStudyCharts(name, container) {
       height: 374,
     }), CFG);
 
+    appendCaption(wrap, nextFigureLabel(), `${g.title} (${g.unit}) time series, all sensors overlaid.`);
     appendChartNotes(wrap, name, key);
   });
 }
@@ -784,6 +927,9 @@ function renderStudyWeather(name, block) {
     margin:   { t: 44, r: 80, b: 100, l: 68 },
     height:   460,
   }, CFG);
+
+  appendCaption(block, nextFigureLabel(),
+    'Sensor temperature and pressure vs. ERA5 reanalysis local weather (Moffett Field, CA) over the same period.');
 
   // ── Source / attribution notes ────────────────────────────────────────────
   const noteUl = document.createElement('ul');
@@ -956,6 +1102,9 @@ function renderStudyScatter(name, block, charts) {
         title: { text: g.unit, font: { size: 11 } },
       }),
     }), { responsive: false, displayModeBar: true, displaylogo: false });
+
+    appendCaption(wrap, nextFigureLabel(),
+      `${g.title} cross-correlation — all sensor pairs (${g.unit}), with 1:1 reference where applicable.`);
 
     // Interpretation text below each scatter chart — computed from the data
     const interpUl = document.createElement('ul');

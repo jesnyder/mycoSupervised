@@ -166,6 +166,30 @@ code {
   font-size: 0.88em;
 }
 
+/* ── Figure / table captions ── */
+.item-caption {
+  font-size: .82rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 6px 2px 18px;
+}
+.item-caption strong { color: var(--text); }
+
+/* ── Methodology note (below a table, links to About page) ── */
+.method-note {
+  background: var(--surface);
+  border-left: 3px solid var(--purple);
+  border-radius: 0 6px 6px 0;
+  padding: 12px 16px;
+  margin: 4px 0 22px;
+  font-size: .85rem;
+  color: var(--text);
+  line-height: 1.7;
+}
+.method-note p { margin-bottom: 8px; font-size: inherit; color: inherit; }
+.method-note p:last-child { margin-bottom: 0; }
+.method-note a { color: var(--blue); }
+
 /* ── Table controls (download button row) ── */
 .tbl-controls {
   display: flex;

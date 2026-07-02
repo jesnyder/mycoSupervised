@@ -44,11 +44,21 @@ reappear in future studies.
     sht30_temp_C, sht30_humidity_pct,
     bme688_1_*, bme688_2_*, stepper_speed_pct, pump_speed_pct, pump_state
 
-  Schema D  (SHT30 + 2× BME688 + AS7341 4-channel):
+  Schema D  (SHT30 + 2× BME688 + AS7341 Mode-1 6-channel — study001_pilot):
     Schema C + as7341_f1..f4, as7341_clear, as7341_nir
+    AS7341 physically has 8 narrowband channels (F1-F8) + CLEAR + NIR, but
+    reading all 8 requires two measurement passes (DFRobot_AS7341 Mode 1 and
+    Mode 2 — see 01_stepper_motor.ino). study001_pilot's firmware only calls
+    Mode 1 (startMeasure(eF1F4ClearNIR) / readSpectralDataOne()), so F5-F8
+    were never captured. This is a firmware limitation, not a bug in this
+    script — as7341_f5..f8 below are defined for forward-compatibility with
+    a future Mode-2-enabled firmware (Schema E) and are simply absent from
+    any CSV that doesn't log them.
 
-  Schema E  (SHT30 + 2× BME688 + AS7341 8-channel — study001_pilot):
+  Schema E  (SHT30 + 2× BME688 + AS7341 full 8-channel — not yet used):
     Schema C + as7341_f1..f8, as7341_clear, as7341_nir
+    Would require the firmware to also call Mode 2
+    (startMeasure(eF5F8ClearNIR) / readSpectralDataTwo()) each sample.
 
 Canonical column aliases (COL_ALIASES):
   pc_timestamp          → timestamp
@@ -133,7 +143,9 @@ Each file sets two globals:
     variables: {
       <col>: { label, unit, total_rows, valid_rows, bad_rows,
                bad_duration_s, bad_reasons, bad_windows[],
-               min, max, range, mean }
+               min, max, range, mean,
+               slope_per_hour, trend_r, diurnal_fit, diurnal_r2,
+               best_fit_model }
     }
   };
 
@@ -283,6 +295,216 @@ CHART_GROUP_META = {
 MAX_CHART_POINTS = 4000
 
 
+# ── Trend, diurnal-cycle & functional-form regression ─────────────────────────
+# All fits use only the Python standard library (no numpy/scipy): every model
+# below is either fit directly by closed-form OLS, or linearised (log/ln
+# transform) so a closed-form OLS still applies. See docs/index.html
+# ("Trend & Diurnal Regression Analysis") for the full write-up of the method
+# and the reasoning behind each threshold.
+MIN_TREND_POINTS     = 3      # need at least 3 points for a meaningful line
+MIN_DIURNAL_POINTS   = 20     # need enough points to fit 3 harmonic parameters reliably
+DIURNAL_R2_THRESHOLD = 0.15   # heuristic: >=15% of variance explained by a 24h cycle
+FIT_R2_THRESHOLD      = 0.30  # heuristic: >=30% of variance explained to report a functional form
+
+
+def ols(x, y):
+    """
+    Ordinary least-squares fit of y = intercept + slope*x.
+    Returns (slope, intercept, r) or None if fewer than 2 points or x is
+    constant (zero variance).  r is Pearson's correlation coefficient
+    (None if y is constant).
+    """
+    n = len(x)
+    if n < 2:
+        return None
+    mx = sum(x) / n
+    my = sum(y) / n
+    sxx = sum((xi - mx) ** 2 for xi in x)
+    if sxx == 0:
+        return None
+    sxy = sum((xi - mx) * (yi - my) for xi, yi in zip(x, y))
+    slope = sxy / sxx
+    intercept = my - slope * mx
+    syy = sum((yi - my) ** 2 for yi in y)
+    r = (sxy / math.sqrt(sxx * syy)) if syy > 0 else None
+    return slope, intercept, r
+
+
+def r2_in_original_space(y, yhat):
+    """R^2 = 1 - SS_res/SS_tot, comparing predictions to actual y (both in
+    the same, untransformed units) so different candidate models are
+    directly comparable. None if y has zero variance."""
+    n = len(y)
+    my = sum(y) / n
+    ss_tot = sum((yi - my) ** 2 for yi in y)
+    if ss_tot == 0:
+        return None
+    ss_res = sum((yi - yhi) ** 2 for yi, yhi in zip(y, yhat))
+    return max(0.0, 1 - ss_res / ss_tot)
+
+
+def solve_3x3(A, b):
+    """Solve a 3x3 linear system by Gaussian elimination with partial
+    pivoting.  Returns None if the matrix is singular."""
+    M = [row[:] + [b[i]] for i, row in enumerate(A)]
+    for col in range(3):
+        pivot_row = max(range(col, 3), key=lambda r: abs(M[r][col]))
+        if abs(M[pivot_row][col]) < 1e-12:
+            return None
+        M[col], M[pivot_row] = M[pivot_row], M[col]
+        for r in range(3):
+            if r == col:
+                continue
+            factor = M[r][col] / M[col][col]
+            for c in range(col, 4):
+                M[r][c] -= factor * M[col][c]
+    return [M[i][3] / M[i][i] for i in range(3)]
+
+
+def diurnal_fit_r2(t_hours, y):
+    """
+    Fit y = a + b*sin(theta) + c*cos(theta), theta = 2*pi*t_hours/24 (a
+    24-hour harmonic), by closed-form least squares, and return the R^2 of
+    that fit — the fraction of variance explained by a diurnal cycle of any
+    phase/amplitude. A phase shift only redistributes the fit between the
+    sin and cos terms, so R^2 does not depend on the arbitrary choice of
+    time origin used for t_hours. None if too few points or the fit is
+    degenerate.
+    """
+    n = len(y)
+    if n < MIN_DIURNAL_POINTS:
+        return None
+    theta = [2 * math.pi * t / 24.0 for t in t_hours]
+    s = [math.sin(th) for th in theta]
+    c = [math.cos(th) for th in theta]
+
+    sum1, sums, sumc = float(n), sum(s), sum(c)
+    sumss = sum(si * si for si in s)
+    sumcc = sum(ci * ci for ci in c)
+    sumsc = sum(si * ci for si, ci in zip(s, c))
+    sumy  = sum(y)
+    sumsy = sum(si * yi for si, yi in zip(s, y))
+    sumcy = sum(ci * yi for ci, yi in zip(c, y))
+
+    A = [[sum1, sums, sumc], [sums, sumss, sumsc], [sumc, sumsc, sumcc]]
+    coeffs = solve_3x3(A, [sumy, sumsy, sumcy])
+    if coeffs is None:
+        return None
+    a0, b0, c0 = coeffs
+
+    yhat = [a0 + b0 * si + c0 * ci for si, ci in zip(s, c)]
+    return r2_in_original_space(y, yhat)
+
+
+def best_fit_model(t_hours, y):
+    """
+    Compare Linear, Exponential (growth/decay), Logarithmic, and Power-law
+    fits of y vs. elapsed time, each obtained via OLS after the appropriate
+    linearising transform (ln(y) and/or ln(t)), with R^2 always evaluated
+    back in original y-units so the candidates are comparable on equal
+    footing. Returns the label of the best-fitting candidate, or None if no
+    candidate clears FIT_R2_THRESHOLD (no clear functional form — data is
+    ~flat or dominated by noise).
+    """
+    n = len(y)
+    if n < MIN_TREND_POINTS:
+        return None
+
+    candidates = []  # [(label, r2), ...]
+
+    # Linear: y = a + b*t
+    lin = ols(t_hours, y)
+    if lin:
+        slope, intercept, _ = lin
+        yhat = [intercept + slope * ti for ti in t_hours]
+        r2 = r2_in_original_space(y, yhat)
+        if r2 is not None:
+            candidates.append(('Linear', r2))
+
+    all_positive_y = all(yi > 0 for yi in y)
+    t_min = min(t_hours)
+    t_shift = [ti - t_min + 0.01 for ti in t_hours]  # > 0, so ln(t) is defined
+    ln_t = [math.log(ti) for ti in t_shift]
+
+    # Exponential: y = a * exp(b*t)  ->  ln(y) = ln(a) + b*t
+    if all_positive_y:
+        try:
+            ln_y = [math.log(yi) for yi in y]
+            exp_fit = ols(t_hours, ln_y)
+            if exp_fit:
+                slope, intercept, _ = exp_fit
+                a = math.exp(intercept)
+                yhat = [a * math.exp(slope * ti) for ti in t_hours]
+                r2 = r2_in_original_space(y, yhat)
+                if r2 is not None:
+                    label = 'Exponential Growth' if slope > 0 else 'Exponential Decay'
+                    candidates.append((label, r2))
+        except (ValueError, OverflowError):
+            pass
+
+    # Logarithmic: y = a + b*ln(t)
+    log_fit = ols(ln_t, y)
+    if log_fit:
+        slope, intercept, _ = log_fit
+        yhat = [intercept + slope * lti for lti in ln_t]
+        r2 = r2_in_original_space(y, yhat)
+        if r2 is not None:
+            candidates.append(('Logarithmic', r2))
+
+    # Power law: y = a * t^b  ->  ln(y) = ln(a) + b*ln(t)
+    if all_positive_y:
+        try:
+            ln_y = [math.log(yi) for yi in y]
+            pow_fit = ols(ln_t, ln_y)
+            if pow_fit:
+                slope, intercept, _ = pow_fit
+                a = math.exp(intercept)
+                yhat = [a * (ti ** slope) for ti in t_shift]
+                r2 = r2_in_original_space(y, yhat)
+                if r2 is not None:
+                    candidates.append(('Power Law', r2))
+        except (ValueError, OverflowError):
+            pass
+
+    if not candidates:
+        return None
+    best_label, best_r2 = max(candidates, key=lambda c: c[1])
+    return best_label if best_r2 >= FIT_R2_THRESHOLD else None
+
+
+def compute_trend_stats(valid_pairs):
+    """
+    Given a list of (datetime, float) valid samples for one sensor column,
+    return (slope_per_hour, trend_r, diurnal_fit, diurnal_r2, best_fit_model).
+
+    slope/r use each sample's absolute epoch time (hours) as x, so results
+    do not depend on an arbitrary choice of time origin. slope/r are None
+    if there are too few points; diurnal_fit is True/False/None;
+    best_fit_model is a label string or None.
+    """
+    if len(valid_pairs) < MIN_TREND_POINTS:
+        return None, None, None, None, None
+
+    t_hours = [dt.timestamp() / 3600.0 for dt, _ in valid_pairs]
+    y = [v for _, v in valid_pairs]
+
+    lin = ols(t_hours, y)
+    slope, r = (lin[0], lin[2]) if lin else (None, None)
+
+    diurnal_r2 = diurnal_fit_r2(t_hours, y)
+    diurnal_fit = None if diurnal_r2 is None else (diurnal_r2 >= DIURNAL_R2_THRESHOLD)
+
+    model = best_fit_model(t_hours, y)
+
+    return (
+        None if slope is None else round(slope, 6),
+        None if r is None else round(r, 4),
+        diurnal_fit,
+        None if diurnal_r2 is None else round(diurnal_r2, 4),
+        model,
+    )
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def normalise_row(raw_row):
@@ -404,6 +626,7 @@ def compute_variable_stats(sessions):
         entries.sort(key=lambda x: x[0])
 
         valid_vals  = []
+        valid_pairs = []  # (datetime, float) — retained for trend/diurnal/model-fit regression
         bad_entries = []
         bad_reasons = defaultdict(int)
 
@@ -413,7 +636,9 @@ def compute_variable_stats(sessions):
                 bad_entries.append((dt, reason))
                 bad_reasons[reason] += 1
             else:
-                valid_vals.append(float(val))
+                fval = float(val)
+                valid_vals.append(fval)
+                valid_pairs.append((dt, fval))
 
         # Group consecutive bad timestamps into windows (gap > 5 s = new window)
         bad_windows = []
@@ -456,6 +681,9 @@ def compute_variable_stats(sessions):
             entry['mean']  = round(sum(valid_vals) / len(valid_vals), 4)
         else:
             entry['min'] = entry['max'] = entry['range'] = entry['mean'] = None
+
+        (entry['slope_per_hour'], entry['trend_r'], entry['diurnal_fit'],
+         entry['diurnal_r2'], entry['best_fit_model']) = compute_trend_stats(valid_pairs)
 
         stats[col] = entry
 

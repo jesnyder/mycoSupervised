@@ -36,6 +36,7 @@
   <a href="#objective">Objective</a>
   <a href="#hardware">Hardware</a>
   <a href="#software">Software</a>
+  <a href="#trend-methods">Trend Methods</a>
   <a href="#future">Future Work</a>
   <a href="#physics">Physics</a>
 </nav>
@@ -124,11 +125,15 @@
       <div class="card">
         <div class="label" style="color:var(--purple)">■ AS7341 (0x39)</div>
         <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
-          DFRobot Gravity module. Eight narrowband channels F1–F8 (415–680&nbsp;nm) + CLEAR + NIR.
-          Positioned under the bag, beneath a light source strong enough to saturate the sensor if
-          unobstructed. Intended as a mycelial-colonization proxy: as the fungus colonizes the
-          substrate and the bag interior fills with white mycelium, transmitted light reaching the
-          sensor is expected to fall.
+          DFRobot Gravity module. The AS7341 chip has 8 narrowband channels (F1–F8, 415–680&nbsp;nm)
+          + CLEAR + NIR, but reading all 8 requires two separate measurement passes
+          (DFRobot_AS7341 Mode&nbsp;1 and Mode&nbsp;2). <strong>Study&nbsp;001's firmware only runs
+          Mode&nbsp;1</strong> (<code>startMeasure(eF1F4ClearNIR)</code> /
+          <code>readSpectralDataOne()</code>) — so only <strong>F1–F4 + CLEAR + NIR (6 channels)</strong>
+          are actually logged; F5–F8 were never captured. Positioned under the bag, beneath a light
+          source strong enough to saturate the sensor if unobstructed. Intended as a
+          mycelial-colonization proxy: as the fungus colonizes the substrate and the bag interior
+          fills with white mycelium, transmitted light reaching the sensor is expected to fall.
         </div>
       </div>
     </div>
@@ -271,7 +276,10 @@ window.STUDY_SUMMARIES["study001_pilot"] = {
   variables: {
     sht30_temp_C: { label, unit, total_rows, valid_rows, bad_rows,
                     bad_duration_s, bad_reasons, bad_windows,
-                    min, max, range, mean },
+                    min, max, range, mean,
+                    slope_per_hour, trend_r,        // linear-regression trend vs. time
+                    diurnal_fit, diurnal_r2,         // 24h sinusoid fit — true/false/null
+                    best_fit_model },                 // 'Linear' | 'Exponential Growth' | ... | null
     ...   // one entry per logged column
   }
 };
@@ -293,6 +301,87 @@ window.STUDY_CHARTS["study001_pilot"] = {
       <span style="color:#0969da;font-weight:600">■ SHT30 #0969da</span> &nbsp;
       <span style="color:#1a7f37;font-weight:600">■ BME688 #1 #1a7f37</span> &nbsp;
       <span style="color:#cf222e;font-weight:600">■ BME688 #2 #cf222e</span>
+    </p>
+
+    <h3 id="trend-methods">Trend, Diurnal &amp; Model-Fit Regression Analysis</h3>
+    <p>
+      Each study page shows a per-variable trend table (labelled "Table 2" on the study page) with
+      five columns: slope, Pearson r, a 24-hour diurnal-fit verdict, and a best-fitting functional
+      form. All of it is computed once, at build time, in
+      <code>user_provided/python/generate_study_summaries.py</code> — functions <code>ols()</code>,
+      <code>diurnal_fit_r2()</code>, <code>best_fit_model()</code>, and
+      <code>compute_trend_stats()</code> — using only valid (non-bad) readings and the Python
+      standard library (no numpy/scipy). This section documents the method in full so results can
+      be reproduced or checked by hand.
+    </p>
+
+    <p><strong>Time basis.</strong> Every fit below uses each sample's absolute epoch time,
+      converted to hours (<code>dt.timestamp() / 3600</code>), as the independent variable. This
+      matters for two reasons: (1) slope and Pearson r are translation-invariant, so the result does
+      not depend on an arbitrary choice of "time zero"; and (2) using true epoch time keeps the
+      diurnal fit's phase tied to actual time-of-day rather than to each variable's own first
+      sample.</p>
+
+    <p><strong>1&nbsp;&nbsp;Linear-regression slope &amp; r</strong></p>
+    <p>Ordinary least squares fit of value <em>y</em> against elapsed time <em>t</em> (hours):</p>
+    <pre>slope = Σ(tᵢ − t̄)(yᵢ − ȳ) / Σ(tᵢ − t̄)²        [unit: variable-unit per hour]
+
+r = Σ(tᵢ − t̄)(yᵢ − ȳ) / √( Σ(tᵢ − t̄)² · Σ(yᵢ − ȳ)² )   [Pearson correlation, −1 to 1]</pre>
+    <p>Slope is the average rate of change over the whole study; a positive slope means the variable
+      trended upward, negative means downward. r measures how well a <em>straight</em> line
+      describes the data — |r| near 1 means the trend is close to linear and consistent; |r| near 0
+      means either no trend or a trend that isn't linear (see the model-fit column for the latter
+      case). Requires at least 3 valid points; shown as "—" otherwise.</p>
+
+    <p><strong>2&nbsp;&nbsp;24-hour diurnal-cycle fit</strong></p>
+    <p>A single 24-hour sinusoid is fit to the data by closed-form least squares (three-parameter
+      normal equations, solved by Gaussian elimination):</p>
+    <pre>θᵢ = 2π · tᵢ / 24                         [t in hours → θ has a 24h period]
+
+y = a + b·sin(θ) + c·cos(θ)                [fit a, b, c by least squares]
+
+R²_diurnal = 1 − SS_res / SS_tot            [fraction of variance explained]</pre>
+    <p>Fitting a sin/cos <em>pair</em> rather than a single sinusoid lets the regression find
+      whatever phase fits best (any amplitude/phase combination is a linear combination of sin and
+      cos), so R²_diurnal does not depend on the arbitrary time origin. The table reports
+      <strong>"Yes"</strong> when R²_diurnal&nbsp;≥&nbsp;0.15 (at least 15% of the variable's
+      variance is explained by a 24h cycle) and <strong>"No"</strong> otherwise. This threshold is a
+      heuristic amplitude screen, not a formal significance/p-value test — it is not corrected for
+      multiple comparisons across variables, and a short study (Study&nbsp;001 ran ~19&nbsp;h, less
+      than one full day) has limited statistical power to confirm a true 24h period versus a
+      monotonic drift that merely resembles one over a partial cycle. Requires at least 20 valid
+      points; shown as "—" otherwise.</p>
+
+    <p><strong>3&nbsp;&nbsp;Best-fit functional form</strong></p>
+    <p>Four candidate models are fit to the same (t, y) data and compared on equal footing. Three of
+      the four are nonlinear in their raw parameters, so each is <em>linearised</em> by a log
+      transform before applying the same closed-form OLS as above, then the fitted curve is
+      evaluated back in original y-units for a fair R² comparison:</p>
+    <pre>Linear:        y = a + b·t                    fit directly by OLS on (t, y)
+
+Exponential:   y = a·exp(b·t)                  fit OLS on (t, ln y);  a = exp(intercept)
+               "Growth" if b &gt; 0, "Decay" if b &lt; 0.  Requires y &gt; 0 everywhere.
+
+Logarithmic:   y = a + b·ln(t)                 fit OLS on (ln t, y)
+               t is shifted so t &gt; 0 (t' = t − min(t) + 0.01h) — ln is undefined at t=0.
+
+Power law:     y = a·t^b                       fit OLS on (ln t, ln y);  a = exp(intercept)
+               Requires y &gt; 0 everywhere (uses the same shifted t' as above).
+
+R² for every candidate is computed as 1 − SS_res/SS_tot using ŷ back in original
+y-units — never in the transformed (ln) space — so all four models are compared
+on the same scale.</pre>
+    <p>The candidate with the highest R² is reported <strong>only if that R² is at least 0.30</strong>
+      (explains ≥30% of variance); otherwise the cell reads <strong>"None"</strong> — meaning no
+      simple functional form (of the four tried) fits the data meaningfully better than noise. A
+      "Linear" result here is a stronger claim than the slope/r columns alone: it means the linear
+      form specifically outperformed the exponential, logarithmic, and power-law alternatives, not
+      merely that r is close to ±1. Requires at least 3 valid points.</p>
+    <p style="font-size:.82rem;color:var(--text-dim)">
+      Caveat: with only four fixed candidate shapes and no cross-validation or corrected degrees of
+      freedom, "best fit" here means best <em>among these four forms</em>, not best possible model —
+      treat it as a descriptive summary of the dominant shape in the data, not a confirmed
+      mechanism.
     </p>
 
     <h3>Web Dashboard</h3>
@@ -350,6 +439,17 @@ bash user_provided/makefile/build.sh</pre>
       <strong>Data analysis pipeline</strong><br>
       Build Python scripts or Jupyter notebooks to visualize and analyze logged CSV data —
       temperature trends, gas resistance as a colonization proxy, light-transmission changes over time.
+    </div>
+
+    <div class="future-item">
+      <strong>Capture full AS7341 8-channel spectrum (F5–F8)</strong><br>
+      Study 001's firmware only runs DFRobot_AS7341 Mode&nbsp;1
+      (<code>startMeasure(eF1F4ClearNIR)</code> / <code>readSpectralDataOne()</code>), so only
+      F1–F4 + CLEAR + NIR are logged even though the chip supports 8 narrowband channels.
+      Alternating Mode&nbsp;1 and Mode&nbsp;2 (<code>eF5F8ClearNIR</code> /
+      <code>readSpectralDataTwo()</code>) each logging cycle — at some cost to sample rate — would
+      capture F5–F8 (555–680&nbsp;nm) too, widening the colonization-proxy signal into the
+      green/amber/orange/red bands.
     </div>
 
     <div class="future-item">
@@ -454,7 +554,7 @@ const sensorsTable = new Tabulator('#sensors-table', {
     { sensor: 'SHT30 Temperature & Humidity',       address: '0x44',           measurements: 'Temperature (°C), Relative Humidity (%RH)' },
     { sensor: 'BME688 #1 Gas/Environmental',         address: '0x76 (SDO→GND)', measurements: 'Temperature, Humidity, Pressure (hPa), Gas Resistance (Ω)' },
     { sensor: 'BME688 #2 Gas/Environmental',         address: '0x77 (SDO→VCC)', measurements: 'Temperature, Humidity, Pressure (hPa), Gas Resistance (Ω)' },
-    { sensor: 'AS7341 Spectral Light (DFRobot Gravity)', address: '0x39',       measurements: 'F1 (415 nm), F2 (445 nm), F3 (480 nm), F4 (515 nm), F5 (555 nm), F6 (590 nm), F7 (630 nm), F8 (680 nm), CLEAR (broadband), NIR (~855 nm)' },
+    { sensor: 'AS7341 Spectral Light (DFRobot Gravity)', address: '0x39',       measurements: 'Logged (Mode 1 only): F1 (415 nm), F2 (445 nm), F3 (480 nm), F4 (515 nm), CLEAR (broadband), NIR (~855 nm). Chip also supports F5 (555 nm), F6 (590 nm), F7 (630 nm), F8 (680 nm) via Mode 2 — not read by this firmware.' },
   ],
   columns: [
     { title: 'Sensor',       field: 'sensor',       headerSort: true, widthGrow: 2 },
