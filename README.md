@@ -26,7 +26,7 @@ Monitor and log environmental conditions in and around a fungus-inoculated subst
 **Study 001 (pilot)** — a liquid culture of fungus was inoculated into a bag of sterile substrate and instrumented on 2026-06-30 at 5:00pm:
 - SHT30 and BME688 #1 sit **outside the bag**, on the table next to it, measuring **ambient room conditions**.
 - BME688 #2 sits **inside the bag**, in contact with the substrate headspace.
-- The AS7341 light sensor sits **under the bag**, illuminated from above with a light strong enough to max out the sensor (1000 across all channels) if the bag were not there — so the bag's own light attenuation is the signal of interest. As mycelium colonizes the substrate and the bag interior turns opaque with growth, transmitted light reaching the sensor is expected to decrease.
+- The AS7341 light sensor sits **under the bag**, illuminated from above with a light strong enough to noticeably saturate the sensor's 16-bit ADC channels (0-65535 raw counts) if the bag were not there — so the bag's own light attenuation is the signal of interest. As mycelium colonizes the substrate and the bag interior turns opaque with growth, transmitted light reaching the sensor is expected to decrease.
 
 ---
 
@@ -42,7 +42,7 @@ Monitor and log environmental conditions in and around a fungus-inoculated subst
 | SHT30 Temperature & Humidity | 0x44 | Temperature (°C), Relative Humidity (%RH) | Outside the bag (ambient) |
 | BME688 #1 Gas/Environmental | 0x76 (SDO → GND) | Temperature, Humidity, Pressure (hPa), Gas Resistance (Ω) | Outside the bag (ambient) |
 | BME688 #2 Gas/Environmental | 0x77 (SDO → VCC) | Temperature, Humidity, Pressure (hPa), Gas Resistance (Ω) | Inside the bag |
-| AS7341 Spectral Light (DFRobot Gravity) | 0x39 | F1 Blue, F2 Cyan, F3 Green, F4 Yellow, CLEAR, NIR | Under the bag, strongly illuminated from above |
+| AS7341 Spectral Light (DFRobot Gravity) | 0x39 | F1 415nm Violet, F2 445nm Indigo, F3 480nm Blue, F4 515nm Cyan, F5 555nm Green, F6 590nm Yellow, F7 630nm Orange, F8 680nm Red, CLEAR, NIR (raw 16-bit ADC counts). All 10 channels logged as of 2026-07-08; earlier sessions logged only F1-F4, CLEAR, NIR | Under the bag, strongly illuminated from above |
 
 The two BME688 sensors are differentiated by the state of their SDO pin: BME688 #1 has SDO pulled to GND (address 0x76) and BME688 #2 has SDO pulled to VCC/3.3V (address 0x77). This allows two identical sensors on the same I2C bus — one outside the bag as an ambient baseline, one inside the bag against the substrate.
 
@@ -60,7 +60,7 @@ The two BME688 sensors are differentiated by the state of their SDO pin: BME688 
 ### Arduino Firmware
 
 **File:** `user_provided/arduino/01_stepper_motor/01_stepper_motor.ino`  
-Written in C/C++. Reads all sensors and streams comma-separated values over serial at 115200 baud every 3 seconds. Controls pump duty cycle timing and stepper motor speed (unused in Study 001). No real-time clock — Arduino timestamps are millis() since boot; absolute timestamps are added by the Python logger.
+Written in C/C++. Reads all sensors and streams comma-separated values over serial at 115200 baud every 5 seconds. Controls pump duty cycle timing and stepper motor speed (unused in Study 001). No real-time clock — Arduino timestamps are millis() since boot; absolute timestamps are added by the Python logger.
 
 **Required Arduino libraries:**
 - `Wire` (built-in)
@@ -81,7 +81,7 @@ Python scripts open the Arduino serial port, parse incoming CSV lines, prepend a
 | `logging_sht30_bme688_bme688.py` | SHT30 + 2× BME688 | (historical, prior project) |
 | `logging_sht30_bme688_bme688_as7341.py` | SHT30 + 2× BME688 + AS7341 | Study 001 |
 
-The current full-sensor logger outputs **24-column CSV files**: PC timestamp, elapsed time, SHT30 (temp, humidity), BME688 #1 (temp, humidity, pressure, gas resistance), BME688 #2 (same), AS7341 (F1–F4, CLEAR, NIR), stepper speed, pump speed, pump state.
+As of 2026-07-08 the full-sensor logger outputs **28-column CSV files**: PC timestamp, elapsed time, SHT30 (temp, humidity), BME688 #1 (temp, humidity, pressure, gas resistance), BME688 #2 (same), AS7341 (F1–F8, CLEAR, NIR), stepper speed, pump speed, pump state. Sessions logged before 2026-07-08 have 24 columns — AS7341 F5–F8 were not yet read (see Sensors table above).
 
 **Output path** — controlled by two variables at the top of each script:
 ```python

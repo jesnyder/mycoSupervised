@@ -41,13 +41,22 @@ SENSORS INCLUDED
 4) AS7341 Spectral Light Sensor (DFRobot Gravity)
    - Library: DFRobot_AS7341
    - Address: 0x39
-   - Measurements (raw ADC counts):
-       F1 (Blue band)
-       F2 (Cyan band)
-       F3 (Green band)
-       F4 (Yellow band)
-       CLEAR (broad visible light)
-       NIR (near-infrared)
+   - Measurements (raw 16-bit ADC counts, 0-65535; 65535 = saturated):
+       F1 415nm (Violet)
+       F2 445nm (Indigo)
+       F3 480nm (Blue)
+       F4 515nm (Cyan)
+       F5 555nm (Green)
+       F6 590nm (Yellow)
+       F7 630nm (Orange)
+       F8 680nm (Red)
+       CLEAR (broad visible light, 380-700nm)
+       NIR (near-infrared, ~855nm)
+     The physical die only exposes 6 ADC channels per measurement pass, so the
+     library splits access into two SMUX-configured modes: Mode 1
+     (eF1F4ClearNIR / readSpectralDataOne -> F1-F4, CLEAR, NIR) and Mode 2
+     (eF5F8ClearNIR / readSpectralDataTwo -> F5-F8, CLEAR, NIR). Both modes are
+     run every logging cycle below to capture all 8 filtered channels each tick.
 
 5) Peristaltic Pump
    - PWM Pin: 5
@@ -71,7 +80,14 @@ REQUIRED LIBRARIES (INSTALL IN ARDUINO IDE)
 -------------------------------------------
 1. Adafruit SHT31 Library
 2. Adafruit BME680 Library
-3. DFRobot AS7341 Library
+3. DFRobot AS7341 Library - IMPORTANT: install the PATCHED copy vendored at
+   user_provided/arduino/libraries/DFRobot_AS7341/ (copy it into your
+   sketchbook's libraries/ folder), not the stock version from Library
+   Manager. The stock version's startMeasure() has no timeout on its
+   measurement-complete wait and can hang the entire sketch indefinitely
+   on an I2C glitch - see PATCH_NOTES.md in that folder for the full story
+   (it caused a multi-hour data gap in study001_pilot). If you do install
+   via Library Manager, copy the patched .cpp/.h over top afterward.
 
 Wire.h is built-in.
 
@@ -79,7 +95,7 @@ Wire.h is built-in.
 
 SYSTEM BEHAVIOR
 ----------------
-- Logs every 3 seconds
+- Logs every 5 seconds
 - Generates timestamp from internal millis() clock
 - Controls pump using ON/OFF cycle timing
 - Reads all sensors sequentially
@@ -106,7 +122,14 @@ IMPORTANT LEARNINGS (FROM DEBUGGING)
 
 2. DFRobot AS7341 API:
    - startMeasure() requires mode argument
-   - readSpectralDataOne() returns struct, not channel calls
+   - readSpectralDataOne()/readSpectralDataTwo() return structs, not channel calls
+   - Switching modes re-runs the SMUX configuration, so startMeasure() must be
+     called again immediately before each readSpectralDataOne()/Two() call if
+     you alternate modes within the same loop iteration (see LOGGING below).
+   - readSpectralDataOne()/Two() return RAW 16-bit ADC register counts
+     (0-65535). The library does NOT normalize to a 0-1000 scale - do not
+     assume 1000 is the saturation point when interpreting these values
+     downstream (see generate_study_summaries.py SENSOR_LIMITS).
 
 3. Pump logic must explicitly reset state or it can "stick off"
 
@@ -272,7 +295,8 @@ void setup() {
   while (as7341.begin() != 0) {
     delay(1000);
   }
-  as7341.startMeasure(DFRobot_AS7341::eF1F4ClearNIR);
+  // Mode is (re)selected each loop iteration via startMeasure() below, since
+  // both Mode 1 (F1-F4) and Mode 2 (F5-F8) are read every logging cycle.
 
   // CSV HEADER
   Serial.println();
@@ -281,7 +305,7 @@ void setup() {
     "SHT30_T,SHT30_H,"
     "BME1_T,BME1_H,BME1_P,BME1_G,"
     "BME2_T,BME2_H,BME2_P,BME2_G,"
-    "AS7341_F1,AS7341_F2,AS7341_F3,AS7341_F4,AS7341_CLEAR,AS7341_NIR,"
+    "AS7341_F1,AS7341_F2,AS7341_F3,AS7341_F4,AS7341_F5,AS7341_F6,AS7341_F7,AS7341_F8,AS7341_CLEAR,AS7341_NIR,"
     "STEPPER_SPEED,PUMP_SPEED,PUMP_STATE"
   );
 }
@@ -328,7 +352,7 @@ void loop() {
   );
 
   // LOGGING
-  if (millis() - lastLog >= 3000) {
+  if (millis() - lastLog >= 5000) {
 
     unsigned long uptime_s = millis() / 1000;
 
@@ -353,11 +377,21 @@ void loop() {
     b2P = bme688_2.pressure / 100.0;
     b2G = bme688_2.gas_resistance;
 
+    // Mode 1: F1-F4 + CLEAR + NIR
+    as7341.startMeasure(DFRobot_AS7341::eF1F4ClearNIR);
     delay(50);
-    DFRobot_AS7341::sModeOneData_t data =
+    DFRobot_AS7341::sModeOneData_t dataOne =
       as7341.readSpectralDataOne();
+    uint16_t *ch1 = (uint16_t*)&dataOne;
 
-    uint16_t *ch = (uint16_t*)&data;
+    // Mode 2: F5-F8 + CLEAR + NIR (CLEAR/NIR from Mode 1 above are logged;
+    // Mode 2's CLEAR/NIR are read as part of the same SMUX pass but not
+    // logged separately, to avoid duplicate columns)
+    as7341.startMeasure(DFRobot_AS7341::eF5F8ClearNIR);
+    delay(50);
+    DFRobot_AS7341::sModeTwoData_t dataTwo =
+      as7341.readSpectralDataTwo();
+    uint16_t *ch2 = (uint16_t*)&dataTwo;
 
     Serial.print(dateStr); Serial.print(",");
     Serial.print(timeStr); Serial.print(",");
@@ -376,12 +410,16 @@ void loop() {
     Serial.print(b2P); Serial.print(",");
     Serial.print(b2G); Serial.print(",");
 
-    Serial.print(ch[0]); Serial.print(",");
-    Serial.print(ch[1]); Serial.print(",");
-    Serial.print(ch[2]); Serial.print(",");
-    Serial.print(ch[3]); Serial.print(",");
-    Serial.print(ch[4]); Serial.print(",");
-    Serial.print(ch[5]); Serial.print(",");
+    Serial.print(ch1[0]); Serial.print(","); // F1 415nm Violet
+    Serial.print(ch1[1]); Serial.print(","); // F2 445nm Indigo
+    Serial.print(ch1[2]); Serial.print(","); // F3 480nm Blue
+    Serial.print(ch1[3]); Serial.print(","); // F4 515nm Cyan
+    Serial.print(ch2[0]); Serial.print(","); // F5 555nm Green
+    Serial.print(ch2[1]); Serial.print(","); // F6 590nm Yellow
+    Serial.print(ch2[2]); Serial.print(","); // F7 630nm Orange
+    Serial.print(ch2[3]); Serial.print(","); // F8 680nm Red
+    Serial.print(ch1[4]); Serial.print(","); // CLEAR (from Mode 1 pass)
+    Serial.print(ch1[5]); Serial.print(","); // NIR (from Mode 1 pass)
 
     Serial.print(speedPercent); Serial.print(",");
     Serial.print(pumpSpeedPercent); Serial.print(",");

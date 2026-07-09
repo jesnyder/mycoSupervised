@@ -44,21 +44,27 @@ reappear in future studies.
     sht30_temp_C, sht30_humidity_pct,
     bme688_1_*, bme688_2_*, stepper_speed_pct, pump_speed_pct, pump_state
 
-  Schema D  (SHT30 + 2× BME688 + AS7341 Mode-1 6-channel — study001_pilot):
+  Schema D  (SHT30 + 2× BME688 + AS7341 Mode-1 6-channel — study001_pilot,
+             CSVs logged before 2026-07-08):
     Schema C + as7341_f1..f4, as7341_clear, as7341_nir
     AS7341 physically has 8 narrowband channels (F1-F8) + CLEAR + NIR, but
     reading all 8 requires two measurement passes (DFRobot_AS7341 Mode 1 and
-    Mode 2 — see 01_stepper_motor.ino). study001_pilot's firmware only calls
-    Mode 1 (startMeasure(eF1F4ClearNIR) / readSpectralDataOne()), so F5-F8
-    were never captured. This is a firmware limitation, not a bug in this
-    script — as7341_f5..f8 below are defined for forward-compatibility with
-    a future Mode-2-enabled firmware (Schema E) and are simply absent from
-    any CSV that doesn't log them.
+    Mode 2 — see 01_stepper_motor.ino). Before 2026-07-08, study001_pilot's
+    firmware only called Mode 1 (startMeasure(eF1F4ClearNIR) /
+    readSpectralDataOne()), so F5-F8 were never captured. This was a firmware
+    limitation, not a bug in this script — as7341_f5..f8 are simply absent
+    from any CSV that doesn't log them, and this script tolerates that.
 
-  Schema E  (SHT30 + 2× BME688 + AS7341 full 8-channel — not yet used):
+  Schema E  (SHT30 + 2× BME688 + AS7341 full 8-channel — study001_pilot,
+             CSVs logged from 2026-07-08 onward):
     Schema C + as7341_f1..f8, as7341_clear, as7341_nir
-    Would require the firmware to also call Mode 2
-    (startMeasure(eF5F8ClearNIR) / readSpectralDataTwo()) each sample.
+    Firmware now calls both Mode 1 (eF1F4ClearNIR / readSpectralDataOne())
+    and Mode 2 (eF5F8ClearNIR / readSpectralDataTwo()) every logging cycle,
+    so all 8 filtered channels are captured each sample. CLEAR/NIR are
+    logged once per row, from the Mode 1 pass. Schema D and Schema E CSVs
+    can coexist in the same studies/ folder — this script processes each
+    file's columns independently, so older 6-channel sessions simply have
+    no as7341_f5..f8 values while newer sessions do.
 
 Canonical column aliases (COL_ALIASES):
   pc_timestamp          → timestamp
@@ -114,8 +120,11 @@ Downsampling:
   All sessions are merged into one time-ordered flat list.  A global
   downsample step (total_rows // MAX_CHART_POINTS) is applied so that each
   study produces at most MAX_CHART_POINTS data points per trace, keeping JS
-  file sizes manageable.  Session gaps > 60 s are marked with a null row so
-  Plotly renders a visible break rather than a misleading connecting line.
+  file sizes manageable.  Any gap > GAP_BREAK_THRESHOLD_S (60 s) between two
+  consecutive *kept* points — whether between separate session files or
+  inside a single session that stalled without closing (see WITHIN-SESSION
+  GAPS above) — is marked with a null row so Plotly renders a visible break
+  rather than a misleading connecting line across missing data.
 
   All y values outside sensor limits become null (JSON null → Plotly gap).
 
@@ -124,13 +133,42 @@ Downsampling:
 
 TIMELINE ANALYSIS
 -----------------
-Each CSV file = one logging session (Arduino running continuously).
-Sessions sorted by first valid timestamp.
+Each CSV file = one logging session. Sessions sorted by first valid
+timestamp. A session file staying open does NOT guarantee continuous
+capture — see WITHIN-SESSION GAPS below — so "session" here means "one CSV
+file," not "one uninterrupted stretch of data."
 
   wall_clock_hours  : calendar span from first to last sample across all files
-  total_logged_hours: sum of each session's own duration (excludes gaps)
-  sessions[]        : per-file start/end/rows/sensors
-  gaps[]            : intervals > 5 s between consecutive sessions
+  total_logged_hours: sum of each session's own duration, MINUS any
+                       within-session gap time (see below) — this is the
+                       actual amount of time covered by real samples, not
+                       just the span between a file's first and last row
+  sessions[]        : per-file start/end/rows/sensors/within_gap_s
+  gaps[]            : all gaps worth surfacing, both between sessions
+                       (> SESSION_GAP_MIN_S = 5 s) and within a single
+                       session (> GAP_BREAK_THRESHOLD_S = 60 s) — see
+                       WITHIN-SESSION GAPS. Each entry has a 'type' field:
+                       'between_sessions' or 'within_session'.
+
+WITHIN-SESSION GAPS
+--------------------
+A single CSV file can stay open across a long logging interruption without
+ever closing and reopening — e.g. if the host PC running the Python logger
+goes to sleep, the Arduino keeps transmitting on its own independent clock,
+but the tiny serial buffers can't hold hours of backlog, so most of what
+the Arduino sent during the interruption is simply never captured. Only
+checking gaps *between* files (the old behavior) makes this invisible: it
+looks like one long, continuous session in the timeline and chart.
+
+find_within_session_gaps() scans each session's own consecutive timestamps
+for jumps > GAP_BREAK_THRESHOLD_S and records, for each one, how much the
+Arduino's own uptime_s field advanced across the same two rows
+(arduino_uptime_delta_s). A small uptime delta despite a large timestamp
+gap means the Arduino kept running normally throughout — the interruption
+was on the host PC / logger side, not a sensor or power failure. A large
+uptime delta comparable to the gap itself would instead suggest the
+Arduino was reset or also stalled. This diagnostic is reported per-gap in
+gaps[] so it doesn't need to be re-derived by hand each time.
 
 OUTPUT JS FILES  (docs/js/<study_name>.js)
 ------------------------------------------
@@ -224,12 +262,20 @@ SENSOR_LIMITS = {
     'bme688_2_humidity_pct':  (  0.1,   99.9),
     'bme688_2_pressure_hpa':  (300.0, 1100.0),
     'bme688_2_gas_ohms':      (  1.0, 500000.0),
-    # DFRobot_AS7341 library outputs a normalized 0–1000 scale, not raw 16-bit ADC.
-    # A reading of exactly 1000 means the channel is saturated (ADC full-scale).
-    # Upper limit set to 999 so that saturated rows are flagged above_max.
-    **{f'as7341_f{i}': (0.0, 999.0) for i in range(1, 9)},
-    'as7341_clear':           (0.0, 999.0),
-    'as7341_nir':             (0.0, 999.0),
+    # DFRobot_AS7341's readSpectralDataOne()/readSpectralDataTwo() return RAW,
+    # unmodified 16-bit ADC register counts (confirmed against
+    # DFRobot_AS7341.cpp getChannelData() — it reads two register bytes into
+    # a uint16_t with no scaling). 65535 = full-scale saturation; upper limit
+    # set to 65534 so saturated rows are flagged above_max. (Do NOT assume a
+    # normalized 0-1000 scale here — an earlier version of this script did,
+    # based on an empirical observation that study001_pilot's specific light
+    # source/gain/integration-time settings happened to keep raw counts under
+    # ~1000; that is a lighting/gain artifact of one study, not a library
+    # behavior, and would have silently nulled out valid readings from any
+    # brighter session or different gain setting.)
+    **{f'as7341_f{i}': (0.0, 65534.0) for i in range(1, 9)},
+    'as7341_clear':           (0.0, 65534.0),
+    'as7341_nir':             (0.0, 65534.0),
 }
 
 # Human-readable label and SI unit per canonical column
@@ -244,7 +290,17 @@ VARIABLE_META = {
     'bme688_2_humidity_pct':  ('BME688 #2 Humidity',       '% RH'),
     'bme688_2_pressure_hpa':  ('BME688 #2 Pressure',       'hPa'),
     'bme688_2_gas_ohms':      ('BME688 #2 Gas Resistance', 'Ω'),
-    **{f'as7341_f{i}': (f'AS7341 F{i}', 'counts') for i in range(1, 9)},
+    # Wavelength/color per the AMS AS7341 datasheet visible-light detection
+    # ranges: F1 405-425nm, F2 435-455nm, F3 470-490nm, F4 505-525nm,
+    # F5 545-565nm, F6 580-600nm, F7 620-640nm, F8 670-690nm.
+    'as7341_f1':              ('AS7341 F1 (415nm Violet)', 'counts'),
+    'as7341_f2':              ('AS7341 F2 (445nm Indigo)', 'counts'),
+    'as7341_f3':              ('AS7341 F3 (480nm Blue)',   'counts'),
+    'as7341_f4':              ('AS7341 F4 (515nm Cyan)',   'counts'),
+    'as7341_f5':              ('AS7341 F5 (555nm Green)',  'counts'),
+    'as7341_f6':              ('AS7341 F6 (590nm Yellow)', 'counts'),
+    'as7341_f7':              ('AS7341 F7 (630nm Orange)', 'counts'),
+    'as7341_f8':              ('AS7341 F8 (680nm Red)',    'counts'),
     'as7341_clear':           ('AS7341 CLEAR',             'counts'),
     'as7341_nir':             ('AS7341 NIR',               'counts'),
 }
@@ -268,17 +324,19 @@ CHART_GROUPS = {
     # Gas resistance (Ω) — proxy for VOC / culture activity
     'bme688_1_gas_ohms':      ('gas',         'BME688 #1', '#1a7f37'),
     'bme688_2_gas_ohms':      ('gas',         'BME688 #2', '#cf222e'),
-    # Light spectrum (counts) — AS7341 channels
-    'as7341_f1':   ('light', 'F1 Blue',   '#1f6feb'),
-    'as7341_f2':   ('light', 'F2 Cyan',   '#1b7c83'),
-    'as7341_f3':   ('light', 'F3 Green',  '#1a7f37'),
-    'as7341_f4':   ('light', 'F4 Yellow', '#9a6700'),
-    'as7341_f5':   ('light', 'F5',        '#6e40c9'),
-    'as7341_f6':   ('light', 'F6',        '#bf3989'),
-    'as7341_f7':   ('light', 'F7',        '#953800'),
-    'as7341_f8':   ('light', 'F8',        '#116329'),
-    'as7341_clear':('light', 'CLEAR',     '#656d76'),
-    'as7341_nir':  ('light', 'NIR',       '#8250df'),
+    # Light spectrum (counts) — AS7341 channels. Trace colors approximate
+    # each channel's actual wavelength (violet -> red across F1-F8) so the
+    # chart legend reads like a visible spectrum; CLEAR/NIR are neutral.
+    'as7341_f1':   ('light', 'F1 Violet (415nm)', '#6f42c1'),
+    'as7341_f2':   ('light', 'F2 Indigo (445nm)', '#4c51bf'),
+    'as7341_f3':   ('light', 'F3 Blue (480nm)',   '#1f6feb'),
+    'as7341_f4':   ('light', 'F4 Cyan (515nm)',   '#0e8a86'),
+    'as7341_f5':   ('light', 'F5 Green (555nm)',  '#1a7f37'),
+    'as7341_f6':   ('light', 'F6 Yellow (590nm)', '#9a6700'),
+    'as7341_f7':   ('light', 'F7 Orange (630nm)', '#bc4c00'),
+    'as7341_f8':   ('light', 'F8 Red (680nm)',    '#cf222e'),
+    'as7341_clear':('light', 'CLEAR',             '#656d76'),
+    'as7341_nir':  ('light', 'NIR (~855nm)',      '#57606a'),
 }
 
 # Title and y-axis label for each chart group
@@ -293,6 +351,22 @@ CHART_GROUP_META = {
 # Target number of data points per trace after downsampling.
 # ~4 000 points is smooth in Plotly and keeps JS files well under 2 MB.
 MAX_CHART_POINTS = 4000
+
+# Any gap between two consecutive timestamps larger than this is treated as a
+# logging interruption: it gets a null-row break in the charts (so Plotly
+# doesn't draw a connecting line across it) and an entry in the gaps list.
+# Applies both between sessions (different CSV files) and *within* a single
+# session (see WITHIN-SESSION GAPS below) — one consistent threshold for
+# "this doesn't look like normal sampling jitter anymore." 60s is comfortably
+# above the fastest logging interval used so far (3-5s), so ordinary jitter
+# never triggers it, but a stalled PC logger reliably does.
+GAP_BREAK_THRESHOLD_S = 60
+
+# Between-session gaps use a much lower threshold (5s) than within-session
+# gaps (60s, above) because there are only ever a handful of sessions (one
+# per CSV file) so a low threshold doesn't create noise, and small gaps
+# between files are usually meaningful (e.g. the logger being restarted).
+SESSION_GAP_MIN_S = 5
 
 
 # ── Trend, diurnal-cycle & functional-form regression ─────────────────────────
@@ -547,18 +621,64 @@ def is_bad(col, raw_value):
 
 # ── File loading ──────────────────────────────────────────────────────────────
 
+def find_within_session_gaps(ts_list, rows):
+    """
+    Scan one session's consecutive valid timestamps for gaps larger than
+    GAP_BREAK_THRESHOLD_S. A single CSV file can stay open across a long
+    logging interruption (e.g. the host PC sleeping) without ever closing —
+    the file boundary alone can't reveal that, so this looks inside the file.
+
+    For each gap, also reports how much the Arduino's own 'uptime_s' field
+    advanced across the same two rows (when parseable). The Arduino runs on
+    its own clock, independent of the host PC and Python process: if
+    uptime_s advanced by roughly the same amount as the gap itself, the
+    Arduino was also not measuring/idle for that stretch; if uptime_s barely
+    moved while the PC clock jumped, the Arduino kept running fine and the
+    interruption was purely on the host PC / logger side (e.g. the PC went
+    to sleep and stopped reading the serial port, so the Arduino's readings
+    during that window were generated but never captured).
+
+    Returns a list of dicts: start (datetime), end (datetime), gap_s (float),
+    arduino_uptime_delta_s (float | None).
+    """
+    gaps = []
+    for j in range(1, len(ts_list)):
+        t0, t1 = ts_list[j - 1], ts_list[j]
+        if t0 is None or t1 is None:
+            continue
+        gap_s = (t1 - t0).total_seconds()
+        if gap_s <= GAP_BREAK_THRESHOLD_S:
+            continue
+        uptime_delta = None
+        try:
+            uptime_delta = float(rows[j].get('uptime_s')) - float(rows[j - 1].get('uptime_s'))
+        except (TypeError, ValueError):
+            pass
+        gaps.append({
+            'start': t0,
+            'end': t1,
+            'gap_s': gap_s,
+            'arduino_uptime_delta_s': uptime_delta,
+        })
+    return gaps
+
+
 def load_study_files(study_dir):
     """
     Read every CSV in study_dir, normalise column names, and return a list of
     session dicts sorted by start timestamp.  Empty / unreadable files skipped.
 
     Each session dict:
-      file       : filename
-      start_dt   : first valid timestamp (datetime)
-      end_dt     : last valid timestamp (datetime)
-      duration_s : seconds from first to last timestamp
-      rows       : list of normalised row dicts
-      ts_list    : parallel list of datetime | None per row
+      file            : filename
+      start_dt        : first valid timestamp (datetime)
+      end_dt          : last valid timestamp (datetime)
+      duration_s      : seconds from first to last timestamp
+      within_gaps     : list of gaps *inside* this file — see
+                        find_within_session_gaps()
+      within_gap_s    : total seconds covered by within_gaps (subtracted from
+                        duration_s wherever "actually logged" time is needed)
+      rows            : list of normalised row dicts
+      ts_list         : parallel list of datetime | None per row
     """
     csv_paths = sorted(glob.glob(os.path.join(study_dir, '*.csv')))
     sessions  = []
@@ -588,13 +708,17 @@ def load_study_files(study_dir):
             print(f'  [skip] {fname}: no parseable timestamps')
             continue
 
+        within_gaps = find_within_session_gaps(ts_list, rows)
+
         sessions.append({
-            'file':       fname,
-            'start_dt':   min(valid_ts),
-            'end_dt':     max(valid_ts),
-            'duration_s': (max(valid_ts) - min(valid_ts)).total_seconds(),
-            'rows':       rows,
-            'ts_list':    ts_list,
+            'file':          fname,
+            'start_dt':      min(valid_ts),
+            'end_dt':        max(valid_ts),
+            'duration_s':    (max(valid_ts) - min(valid_ts)).total_seconds(),
+            'within_gaps':   within_gaps,
+            'within_gap_s':  sum(g['gap_s'] for g in within_gaps),
+            'rows':          rows,
+            'ts_list':       ts_list,
         })
 
     sessions.sort(key=lambda s: s['start_dt'])
@@ -699,8 +823,18 @@ def build_chart_data(sessions):
     Steps:
       1. Compute a global downsample step so total output ≤ MAX_CHART_POINTS.
       2. Within each session, take every step-th row.
-      3. Insert a null-valued row at session boundaries where gap > 60 s so
-         Plotly shows a visible break instead of a connecting line.
+      3. Insert a null-valued row wherever a known real gap (between
+         sessions, or within one — see WITHIN-SESSION GAPS above) falls
+         between two consecutive *kept* points, so Plotly shows a visible
+         break instead of a connecting line. Real gaps are looked up from
+         precomputed intervals rather than re-derived from the downsampled
+         spacing itself: after thinning to every step-th row, consecutive
+         kept points are naturally step * (sampling interval) apart — e.g.
+         at a 64-row stride and a 3-5s sampling interval, ~200-300s — which
+         can easily exceed GAP_BREAK_THRESHOLD_S on its own with no real
+         interruption. Checking the downsampled delta directly would flag
+         nearly every point as a break; checking against the actual known
+         gap intervals instead avoids that.
       4. Produce a single shared x-timestamp array and per-trace y arrays
          (bad / out-of-range values become None → JSON null → Plotly gap).
       5. Only include chart groups and traces that have at least some valid data.
@@ -710,10 +844,23 @@ def build_chart_data(sessions):
     total_rows = sum(len(s['rows']) for s in sessions)
     step = max(1, total_rows // MAX_CHART_POINTS)
 
-    # Build flat list of (datetime, row_dict | None)
-    # None entries are session-gap separators that produce line breaks in Plotly
+    # Precompute every real gap (> GAP_BREAK_THRESHOLD_S) as a (start, end)
+    # interval, from both between-session and within-session sources, sorted
+    # by start. Used below to place breaks correctly regardless of the
+    # downsampling stride.
+    gap_intervals = []
+    for i in range(1, len(sessions)):
+        gap_s = (sessions[i]['start_dt'] - sessions[i - 1]['end_dt']).total_seconds()
+        if gap_s > GAP_BREAK_THRESHOLD_S:
+            gap_intervals.append((sessions[i - 1]['end_dt'], sessions[i]['start_dt']))
+    for sess in sessions:
+        for g in sess['within_gaps']:
+            gap_intervals.append((g['start'], g['end']))
+    gap_intervals.sort()
+
+    # Downsample each session independently, then concatenate in order.
     flat = []
-    for i, sess in enumerate(sessions):
+    for sess in sessions:
         pairs = [
             (dt, row)
             for dt, row in zip(sess['ts_list'], sess['rows'])
@@ -721,10 +868,22 @@ def build_chart_data(sessions):
         ]
         flat.extend(pairs[::step])
 
-        if i < len(sessions) - 1:
-            gap_s = (sessions[i + 1]['start_dt'] - sess['end_dt']).total_seconds()
-            if gap_s > 60:
-                flat.append((sess['end_dt'], None))  # separator
+    # Single pass: insert a None separator between consecutive *kept*
+    # points whenever a known gap interval starts inside that span. A
+    # two-pointer sweep works because both flat (by construction) and
+    # gap_intervals (sorted above) are in chronological order.
+    flat_with_breaks = []
+    prev_dt = None
+    gi, n_gaps = 0, len(gap_intervals)
+    for dt, row in flat:
+        if prev_dt is not None:
+            while gi < n_gaps and gap_intervals[gi][1] <= prev_dt:
+                gi += 1
+            if gi < n_gaps and prev_dt <= gap_intervals[gi][0] < dt:
+                flat_with_breaks.append((prev_dt, None))  # separator
+        flat_with_breaks.append((dt, row))
+        prev_dt = dt
+    flat = flat_with_breaks
 
     # Shared x timestamps
     x = [dt.strftime('%Y-%m-%d %H:%M:%S') for dt, _ in flat]
@@ -940,22 +1099,36 @@ def generate_interpretation(sessions, variable_stats):
 
     # ── Session coverage ─────────────────────────────────────────────────
     if sessions:
-        wall_s   = (sessions[-1]['end_dt'] - sessions[0]['start_dt']).total_seconds()
-        logged_s = sum(s['duration_s'] for s in sessions)
-        coverage = logged_s / wall_s if wall_s > 0 else 1.0
-        n        = len(sessions)
-        if coverage > 0.9:
+        wall_s      = (sessions[-1]['end_dt'] - sessions[0]['start_dt']).total_seconds()
+        within_gap_s = sum(s['within_gap_s'] for s in sessions)
+        logged_s    = sum(s['duration_s'] for s in sessions) - within_gap_s
+        coverage    = logged_s / wall_s if wall_s > 0 else 1.0
+        n           = len(sessions)
+        n_within_gaps = sum(len(s['within_gaps']) for s in sessions)
+        if coverage > 0.9 and n_within_gaps == 0:
             bullets.append(
                 f"Logging coverage was continuous: {coverage * 100:.0f}% of the "
                 f"{wall_s / 3600:.1f} h experiment span captured across {n} session(s)."
             )
         else:
             gap_h = (wall_s - logged_s) / 3600
+            within_note = ""
+            if n_within_gaps:
+                within_h = within_gap_s / 3600
+                within_note = (
+                    f" {n_within_gaps} of those gap(s) occurred *inside* an otherwise "
+                    f"continuous session file (~{within_h:.1f} h total) — the logger process "
+                    f"stayed running the whole time but stopped capturing data for a stretch, "
+                    f"most consistent with the host PC sleeping or the serial connection "
+                    f"stalling, not the Arduino itself resetting (check each gap's "
+                    f"arduino_uptime_delta_s in the timeline data: a small delta despite a "
+                    f"large gap means the Arduino kept running fine throughout)."
+                )
             bullets.append(
                 f"Logging ran across {n} session(s) with ~{gap_h:.1f} h of gaps "
-                f"in a {wall_s / 3600:.1f} h window ({coverage * 100:.0f}% coverage). "
-                f"Gaps likely reflect equipment restarts or deliberate pauses between "
-                f"experimental phases."
+                f"in a {wall_s / 3600:.1f} h window ({coverage * 100:.0f}% coverage)."
+                f"{within_note} Gaps between separate session files likely reflect "
+                f"equipment restarts or deliberate pauses between experimental phases."
             )
 
     # ── Temperature-pressure relationship text ────────────────────────────
@@ -1034,10 +1207,14 @@ def summarise_study(study_dir):
         return None
 
     # Timeline
-    overall_start  = sessions[0]['start_dt']
-    overall_end    = sessions[-1]['end_dt']
-    wall_clock_s   = (overall_end - overall_start).total_seconds()
-    total_logged_s = sum(s['duration_s'] for s in sessions)
+    overall_start   = sessions[0]['start_dt']
+    overall_end     = sessions[-1]['end_dt']
+    wall_clock_s    = (overall_end - overall_start).total_seconds()
+    total_within_gap_s = sum(s['within_gap_s'] for s in sessions)
+    # "Logged" time excludes within-session gaps: a session's duration_s
+    # spans first-to-last timestamp in the file, but any within_gaps inside
+    # that span were not actually captured (see find_within_session_gaps).
+    total_logged_s = sum(s['duration_s'] for s in sessions) - total_within_gap_s
 
     session_summaries = []
     for s in sessions:
@@ -1047,25 +1224,42 @@ def summarise_study(study_dir):
             if c not in SKIP_STATS and c != 'timestamp' and not c.startswith('arduino_')
         )
         session_summaries.append({
-            'file':       s['file'],
-            'start':      s['start_dt'].strftime('%Y-%m-%d %H:%M:%S'),
-            'end':        s['end_dt'].strftime('%Y-%m-%d %H:%M:%S'),
-            'duration_s': int(s['duration_s']),
-            'rows':       len(s['rows']),
-            'sensors':    sensor_cols,
+            'file':          s['file'],
+            'start':         s['start_dt'].strftime('%Y-%m-%d %H:%M:%S'),
+            'end':           s['end_dt'].strftime('%Y-%m-%d %H:%M:%S'),
+            'duration_s':    int(s['duration_s']),
+            'within_gap_s':  int(s['within_gap_s']),
+            'rows':          len(s['rows']),
+            'sensors':       sensor_cols,
         })
 
     gaps = []
     for i in range(1, len(sessions)):
         gap_s = (sessions[i]['start_dt'] - sessions[i - 1]['end_dt']).total_seconds()
-        if gap_s > 5:
+        if gap_s > SESSION_GAP_MIN_S:
             gaps.append({
+                'type':        'between_sessions',
                 'after_file':  sessions[i - 1]['file'],
                 'before_file': sessions[i]['file'],
+                'gap_start':   sessions[i - 1]['end_dt'].strftime('%Y-%m-%d %H:%M:%S'),
+                'gap_end':     sessions[i]['start_dt'].strftime('%Y-%m-%d %H:%M:%S'),
                 'gap_s':       int(gap_s),
                 'gap_minutes': round(gap_s / 60, 1),
                 'gap_hours':   round(gap_s / 3600, 2),
             })
+    for s in sessions:
+        for g in s['within_gaps']:
+            gaps.append({
+                'type':                    'within_session',
+                'file':                    s['file'],
+                'gap_start':               g['start'].strftime('%Y-%m-%d %H:%M:%S'),
+                'gap_end':                 g['end'].strftime('%Y-%m-%d %H:%M:%S'),
+                'gap_s':                   int(g['gap_s']),
+                'gap_minutes':             round(g['gap_s'] / 60, 1),
+                'gap_hours':               round(g['gap_s'] / 3600, 2),
+                'arduino_uptime_delta_s':  g['arduino_uptime_delta_s'],
+            })
+    gaps.sort(key=lambda g: g['gap_start'])
 
     timeline = {
         'first':              overall_start.strftime('%Y-%m-%d %H:%M:%S'),
@@ -1080,7 +1274,8 @@ def summarise_study(study_dir):
         'gaps':               gaps,
     }
 
-    print(f'  {len(sessions)} sessions, {int(total_logged_s):,} s logged')
+    print(f'  {len(sessions)} sessions, {int(total_logged_s):,} s logged, '
+          f'{len(gaps)} gap(s) ({int(total_within_gap_s):,} s within-session)')
     print('  Computing variable stats ...')
     variable_stats = compute_variable_stats(sessions)
 

@@ -1,7 +1,7 @@
 """
 ===========================================================
 MULTI-SENSOR REACTOR DATA LOGGER (UPDATED)
-Date: 2026-06-16
+Date: 2026-07-08
 ===========================================================
 
 DESCRIPTION
@@ -11,7 +11,9 @@ multi-sensor reactor system including:
 
 - SHT30 (Temp/Humidity)
 - 2x BME688 (Env + gas sensing)
-- AS7341 spectral light sensor (DFRobot Gravity)
+- AS7341 spectral light sensor (DFRobot Gravity) - full 8-channel
+  spectrum (F1-F8) + CLEAR + NIR, read via both DFRobot_AS7341
+  measurement modes each logging cycle (see 01_stepper_motor.ino)
 - Pump + system state
 
 It safely handles:
@@ -26,10 +28,19 @@ and real-time terminal echo.
 
 IMPORTANT FIXES
 ---------------
-- Rejects lines that do not have exactly 22 columns
+- Rejects lines that do not have exactly 26 columns
 - Skips non-CSV Arduino startup text
 - Prevents "incomplete packet" errors
 - Always prints valid rows to terminal
+
+SCHEMA NOTE
+-----------
+As of 2026-07-08 the firmware reads both AS7341 measurement modes each
+cycle, so this logger now emits 8 spectral channels (as7341_f1..f8)
+instead of the previous 4 (as7341_f1..f4). CSVs collected before this
+date have 24 columns (22 Arduino fields); CSVs collected after have 28
+(26 Arduino fields). generate_study_summaries.py handles both schemas
+automatically per-file - see its Schema D / Schema E documentation.
 """
 
 import os
@@ -102,6 +113,10 @@ with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
             "as7341_f2",
             "as7341_f3",
             "as7341_f4",
+            "as7341_f5",
+            "as7341_f6",
+            "as7341_f7",
+            "as7341_f8",
             "as7341_clear",
             "as7341_nir",
 
@@ -130,8 +145,8 @@ with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
 
                 parts = line.split(",")
 
-                # MUST BE EXACTLY 22 FIELDS
-                if len(parts) != 22:
+                # MUST BE EXACTLY 26 FIELDS
+                if len(parts) != 26:
                     print("SKIP (bad packet length):", len(parts), "->", line)
                     continue
 
@@ -157,12 +172,16 @@ with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
                     f2 = float(parts[14])
                     f3 = float(parts[15])
                     f4 = float(parts[16])
-                    clear = float(parts[17])
-                    nir = float(parts[18])
+                    f5 = float(parts[17])
+                    f6 = float(parts[18])
+                    f7 = float(parts[19])
+                    f8 = float(parts[20])
+                    clear = float(parts[21])
+                    nir = float(parts[22])
 
-                    stepper = float(parts[19])
-                    pump = float(parts[20])
-                    state = parts[21]
+                    stepper = float(parts[23])
+                    pump = float(parts[24])
+                    state = parts[25]
 
                 except ValueError:
                     print("SKIP (parse error):", line)
@@ -192,7 +211,7 @@ with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
                     b2_p,
                     b2_g,
 
-                    f1, f2, f3, f4, clear, nir,
+                    f1, f2, f3, f4, f5, f6, f7, f8, clear, nir,
 
                     stepper,
                     pump,
@@ -212,7 +231,7 @@ with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2) as ser:
                     "RH:", sht_hum,
                     "B1:", b1_t, b1_h, b1_p, b1_g,
                     "B2:", b2_t, b2_h, b2_p, b2_g,
-                    "AS7341:", f1, f2, f3, f4, clear, nir,
+                    "AS7341:", f1, f2, f3, f4, f5, f6, f7, f8, clear, nir,
                     "Pump:", pump, state
                 )
 

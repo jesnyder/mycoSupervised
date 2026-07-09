@@ -1,0 +1,11 @@
+DFRobot Gravity AS7341 
+https://www.dfrobot.com/product-2131.html 
+
+BME 688 
+Adafruit BME688 - Temperature, Humidity, Pressure and Gas Sensor (STEMMA
+QT) [ID:5046]
+https://www.adafruit.com/product/5046
+
+SHT30 
+SHT30 Temperature And Humidity Sensor -  Wired Enclosed Shell[ID:5064]
+https://www.adafruit.com/product/5064

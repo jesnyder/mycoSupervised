@@ -29,7 +29,7 @@
     Arduino-based environmental monitoring system for observing fungal growth through a substrate.
     Continuous multi-sensor logging of a liquid fungal culture inoculated into a sterile substrate bag.
   </p>
-  <p class="date">Last updated: 2026-06-30</p>
+  <p class="date">Last updated: 2026-07-08</p>
 </header>
 
 <nav>
@@ -50,7 +50,7 @@
       Design and characterise an affordable, extensible environmental monitoring platform for
       observing fungal growth through a solid substrate. The system logs temperature, relative
       humidity, atmospheric pressure, volatile organic compounds (VOC proxy via gas resistance), and
-      spectral light intensity every 3&nbsp;seconds, streaming data from an Arduino over serial to a host PC.
+      spectral light intensity every 5&nbsp;seconds, streaming data from an Arduino over serial to a host PC.
       The goal is to find sensor-based proxies for substrate colonization — using ambient-vs-in-bag
       differentials in temperature, humidity, and gas resistance as indicators of fungal metabolic
       activity, and light transmission through the bag as an indicator of mycelial density.
@@ -61,8 +61,8 @@
       <strong>Sensor placement is critical to interpretation</strong>: SHT30 and BME688&nbsp;#1 sit
       outside the bag, on the table next to it, and measure ambient room conditions. BME688&nbsp;#2
       sits inside the bag, in direct contact with the substrate headspace. The AS7341 light sensor
-      sits under the bag, illuminated from above by a light strong enough to saturate the sensor
-      (1000 across all channels) if the bag were not attenuating it — so light transmitted through
+      sits under the bag, illuminated from above by a light strong enough to saturate the sensor's
+      16-bit ADC channels if the bag were not attenuating it — so light transmitted through
       the bag, not absolute brightness, is the signal of interest.
     </p>
     <p>
@@ -72,9 +72,9 @@
       <div class="card"><div class="label">Subject</div><div class="value">Fungal substrate colonization</div></div>
       <div class="card"><div class="label">Pilot studies</div><div class="value">1</div></div>
       <div class="card"><div class="label">Study&nbsp;001 started</div><div class="value">2026-06-30 17:00</div></div>
-      <div class="card"><div class="label">Logging interval</div><div class="value">3 seconds</div></div>
+      <div class="card"><div class="label">Logging interval</div><div class="value">5 seconds (was 3s before 2026-07-08)</div></div>
       <div class="card"><div class="label">Sensors on I²C</div><div class="value">4 types</div></div>
-      <div class="card"><div class="label">CSV columns</div><div class="value">24 (22 Arduino + 2 PC)</div></div>
+      <div class="card"><div class="label">CSV columns</div><div class="value">24 through 2026-07-08, 28 after (AS7341 8-channel firmware update)</div></div>
       <div class="card"><div class="label">Status</div><div class="value">Active</div></div>
     </div>
   </section>
@@ -96,47 +96,51 @@
       Sensor position is fixed for study&nbsp;001 and directly affects how every chart should be
       read. This placement must be documented here because it is not encoded in the CSV data:
     </p>
-    <div class="card-grid">
-      <div class="card">
-        <div class="label" style="color:var(--blue)">■ SHT30 (0x44)</div>
-        <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
+    <ul class="placement-list">
+      <li style="--item-color:var(--blue)">
+        <div class="label">■ SHT30 (0x44)</div>
+        <div class="value">
           On the table, outside the bag. Measures <strong>ambient room temperature and relative humidity</strong>.
           Capacitive polymer RH element; accuracy ±0.2&nbsp;°C, ±2&nbsp;%&nbsp;RH (typ.).
           Not in contact with the substrate.
         </div>
-      </div>
-      <div class="card">
-        <div class="label" style="color:var(--green)">■ BME688 #1 (0x76)</div>
-        <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
+      </li>
+      <li style="--item-color:var(--green)">
+        <div class="label">■ BME688 #1 (0x76)</div>
+        <div class="value">
           On the table, outside the bag, next to SHT30. Measures ambient T, RH, P, and
           <strong>background lab VOCs</strong>. Provides an environmental baseline and drift
           reference for BME688&nbsp;#2. MOX sensor requires 1–3&nbsp;h burn-in per session.
         </div>
-      </div>
-      <div class="card">
-        <div class="label" style="color:var(--orange)">■ BME688 #2 (0x77)</div>
-        <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
+      </li>
+      <li style="--item-color:var(--orange)">
+        <div class="label">■ BME688 #2 (0x77)</div>
+        <div class="value">
           Positioned <strong>inside the substrate bag</strong>, in the headspace above the substrate.
           Temperature and humidity reflect in-bag microclimate, not room conditions. Gas resistance
           tracks VOCs building up in the enclosed headspace, potentially including fungal metabolic
           off-gassing. This is the sensor most directly exposed to the fungal culture.
         </div>
-      </div>
-      <div class="card">
-        <div class="label" style="color:var(--purple)">■ AS7341 (0x39)</div>
-        <div class="value" style="font-size:.88rem;font-weight:400;margin-top:4px">
+      </li>
+      <li style="--item-color:var(--purple)">
+        <div class="label">■ AS7341 (0x39)</div>
+        <div class="value">
           DFRobot Gravity module. The AS7341 chip has 8 narrowband channels (F1–F8, 415–680&nbsp;nm)
           + CLEAR + NIR, but reading all 8 requires two separate measurement passes
-          (DFRobot_AS7341 Mode&nbsp;1 and Mode&nbsp;2). <strong>Study&nbsp;001's firmware only runs
-          Mode&nbsp;1</strong> (<code>startMeasure(eF1F4ClearNIR)</code> /
-          <code>readSpectralDataOne()</code>) — so only <strong>F1–F4 + CLEAR + NIR (6 channels)</strong>
-          are actually logged; F5–F8 were never captured. Positioned under the bag, beneath a light
-          source strong enough to saturate the sensor if unobstructed. Intended as a
-          mycelial-colonization proxy: as the fungus colonizes the substrate and the bag interior
-          fills with white mycelium, transmitted light reaching the sensor is expected to fall.
+          (DFRobot_AS7341 Mode&nbsp;1 and Mode&nbsp;2). <strong>As of 2026-07-08 the firmware runs
+          both modes every logging cycle</strong> (Mode&nbsp;1: <code>startMeasure(eF1F4ClearNIR)</code>
+          / <code>readSpectralDataOne()</code>; Mode&nbsp;2: <code>startMeasure(eF5F8ClearNIR)</code>
+          / <code>readSpectralDataTwo()</code>), so <strong>all 8 filtered channels + CLEAR + NIR
+          (10 channels)</strong> are logged. Sessions recorded before this firmware update — all 9
+          Study&nbsp;001 CSVs through 2026-07-08 — were captured under the old Mode-1-only firmware
+          and contain only F1–F4 + CLEAR + NIR; F5–F8 are simply absent from those files. Positioned
+          under the bag, beneath a light source strong enough to saturate the sensor if unobstructed.
+          Intended as a mycelial-colonization proxy: as the fungus colonizes the substrate and the
+          bag interior fills with white mycelium, transmitted light reaching the sensor is expected
+          to fall.
         </div>
-      </div>
-    </div>
+      </li>
+    </ul>
 
     <h3>Sensors</h3>
     <div class="tbl-wrapper">
@@ -191,24 +195,40 @@
     <h3>Arduino Firmware</h3>
     <p>
       <code>user_provided/arduino/01_stepper_motor/01_stepper_motor.ino</code> — C/C++. Reads all
-      sensors every 3&nbsp;seconds, streams 22 comma-separated fields over serial at
-      115,200&nbsp;baud, and manages peristaltic pump duty-cycle (0&nbsp;min ON / 1000&nbsp;min OFF
-      by default — effectively disabled for Study 001) and stepper motor speed. No RTC — uptime is
+      sensors every 5&nbsp;seconds (3s before 2026-07-08), streams 26 comma-separated fields over
+      serial at 115,200&nbsp;baud (24 before the 2026-07-08 AS7341 8-channel update — see the AS7341
+      card above), and manages peristaltic pump duty-cycle (0&nbsp;min ON / 1000&nbsp;min OFF by
+      default — effectively disabled for Study 001) and stepper motor speed. No RTC — uptime is
       <code>millis()</code> since boot.
     </p>
     <p><strong>Required Arduino libraries:</strong></p>
     <span class="chip">Wire (built-in)</span>
     <span class="chip">Adafruit_SHT31</span>
     <span class="chip">Adafruit_BME680</span>
-    <span class="chip">DFRobot_AS7341</span>
+    <span class="chip">DFRobot_AS7341 (patched — see below)</span>
+    <p style="font-size:.82rem;color:var(--text-dim);margin-top:6px">
+      <strong>DFRobot_AS7341 must be the patched copy</strong> vendored at
+      <code>user_provided/arduino/libraries/DFRobot_AS7341/</code>, not the stock version from
+      Arduino Library Manager. The stock library's <code>startMeasure()</code> waits for the
+      sensor's measurement-complete status bit with no timeout — an I2C glitch can hang it
+      forever, freezing the entire sketch (all sensors and pump/stepper control share one
+      <code>loop()</code>). This wasn't theoretical: it caused a ~3&nbsp;hour firmware freeze
+      within Study&nbsp;001's data (confirmed by the sketch's own <code>uptime_s</code> jumping
+      ~3&nbsp;hours in a single loop iteration — see the Logging Gaps table on the
+      <a href="study001_pilot.html">Study 001 page</a>, "Arduino firmware itself froze" row).
+      The patched version adds a ~3s timeout so it proceeds instead of hanging. See
+      <code>user_provided/arduino/libraries/DFRobot_AS7341/PATCH_NOTES.md</code> for details and
+      reinstall instructions.
+    </p>
 
     <h3>Python Data Loggers</h3>
     <p>
       Active scripts live in <code>user_provided/arduino/01_stepper_motor/</code>; archived copies
       in <code>user_provided/python/archive/</code>. Each script opens the Arduino serial port,
-      rejects lines without exactly 22 fields (handles startup noise and truncated packets),
-      prepends <code>pc_timestamp</code> and <code>elapsed_s</code>, and appends rows to a
-      timestamped CSV in the correct <code>studies/</code> subfolder.
+      rejects lines without exactly the expected field count (26 as of 2026-07-08, was 22 before —
+      handles startup noise and truncated packets), prepends <code>pc_timestamp</code> and
+      <code>elapsed_s</code>, and appends rows to a timestamped CSV in the correct
+      <code>studies/</code> subfolder.
     </p>
     <p>
       Output path is resolved automatically — three levels up from the script file gives the repo
@@ -305,7 +325,8 @@ window.STUDY_CHARTS["study001_pilot"] = {
 
     <h3 id="trend-methods">Trend, Diurnal &amp; Model-Fit Regression Analysis</h3>
     <p>
-      Each study page shows a per-variable trend table (labelled "Table 2" on the study page) with
+      Each study page shows a per-variable trend table (labelled "Table 3" on the study page — the
+      logging-gaps and variable-stats tables are Table 1 and Table 2) with
       five columns: slope, Pearson r, a 24-hour diurnal-fit verdict, and a best-fitting functional
       form. All of it is computed once, at build time, in
       <code>user_provided/python/generate_study_summaries.py</code> — functions <code>ols()</code>,
@@ -442,17 +463,6 @@ bash user_provided/makefile/build.sh</pre>
     </div>
 
     <div class="future-item">
-      <strong>Capture full AS7341 8-channel spectrum (F5–F8)</strong><br>
-      Study 001's firmware only runs DFRobot_AS7341 Mode&nbsp;1
-      (<code>startMeasure(eF1F4ClearNIR)</code> / <code>readSpectralDataOne()</code>), so only
-      F1–F4 + CLEAR + NIR are logged even though the chip supports 8 narrowband channels.
-      Alternating Mode&nbsp;1 and Mode&nbsp;2 (<code>eF5F8ClearNIR</code> /
-      <code>readSpectralDataTwo()</code>) each logging cycle — at some cost to sample rate — would
-      capture F5–F8 (555–680&nbsp;nm) too, widening the colonization-proxy signal into the
-      green/amber/orange/red bands.
-    </div>
-
-    <div class="future-item">
       <strong>Real-time clock (RTC) integration</strong><br>
       Add an RTC module to the Arduino so timestamps originate on the microcontroller, removing
       the dependency on the host PC for absolute time.
@@ -540,7 +550,7 @@ so respiration-driven CO₂ buildup in the bag headspace is invisible to this se
 
 </main>
 
-<footer>mycoSupervised &mdash; Last updated 2026-06-30</footer>
+<footer>mycoSupervised &mdash; Last updated 2026-07-08</footer>
 
 </div><!-- /.page-wrap -->
 
@@ -554,7 +564,7 @@ const sensorsTable = new Tabulator('#sensors-table', {
     { sensor: 'SHT30 Temperature & Humidity',       address: '0x44',           measurements: 'Temperature (°C), Relative Humidity (%RH)' },
     { sensor: 'BME688 #1 Gas/Environmental',         address: '0x76 (SDO→GND)', measurements: 'Temperature, Humidity, Pressure (hPa), Gas Resistance (Ω)' },
     { sensor: 'BME688 #2 Gas/Environmental',         address: '0x77 (SDO→VCC)', measurements: 'Temperature, Humidity, Pressure (hPa), Gas Resistance (Ω)' },
-    { sensor: 'AS7341 Spectral Light (DFRobot Gravity)', address: '0x39',       measurements: 'Logged (Mode 1 only): F1 (415 nm), F2 (445 nm), F3 (480 nm), F4 (515 nm), CLEAR (broadband), NIR (~855 nm). Chip also supports F5 (555 nm), F6 (590 nm), F7 (630 nm), F8 (680 nm) via Mode 2 — not read by this firmware.' },
+    { sensor: 'AS7341 Spectral Light (DFRobot Gravity)', address: '0x39',       measurements: 'F1 415nm Violet, F2 445nm Indigo, F3 480nm Blue, F4 515nm Cyan, F5 555nm Green, F6 590nm Yellow, F7 630nm Orange, F8 680nm Red, CLEAR (broadband), NIR (~855 nm) — raw 16-bit ADC counts (0-65535). All 10 channels logged as of 2026-07-08 (Mode 1 + Mode 2 each cycle); sessions before that date logged only F1-F4, CLEAR, NIR (Mode 1 only).' },
   ],
   columns: [
     { title: 'Sensor',       field: 'sensor',       headerSort: true, widthGrow: 2 },

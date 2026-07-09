@@ -32,7 +32,7 @@
     Liquid fungal culture inoculated into a bag of sterile substrate. Sensors deployed
     2026-06-30 17:00 — see the description below for placement.
   </p>
-  <p class="date">Last updated: 2026-06-30</p>
+  <p class="date">Last updated: 2026-07-08</p>
 </header>
 
 <main>
@@ -59,7 +59,7 @@
 
 </main>
 
-<footer>mycoSupervised &mdash; Last updated 2026-06-30</footer>
+<footer>mycoSupervised &mdash; Last updated 2026-07-08</footer>
 
 </div><!-- /.page-wrap -->
 
@@ -172,6 +172,13 @@ function renderStudy(container, data) {
       </div>
     </div>
 
+    <div class="item-caption" id="cap-gaps-${name}" style="margin:6px 2px 8px"></div>
+    <div class="tbl-controls">
+      <button class="btn" id="dl-gaps-${name}">${DL_ICON} Download CSV</button>
+      <span style="color:var(--text-dim);font-size:.85rem">${t.gap_count} gap(s)</span>
+    </div>
+    <div id="table-gaps-${name}"></div>
+
     <div class="item-caption" id="cap-stats-${name}" style="margin:6px 2px 8px"></div>
     <div class="tbl-controls">
       <button class="btn" id="dl-stats-${name}">${DL_ICON} Download CSV</button>
@@ -188,6 +195,86 @@ function renderStudy(container, data) {
     <div class="method-note" id="method-note-${name}"></div>
   `;
   container.appendChild(block);
+
+  // ── Tabulator: logging gaps ─────────────────────────────────────────────────
+  // Diagnoses each gap using arduino_uptime_delta_s (within_session gaps only):
+  // the Arduino runs on its own independent clock (millis()), so comparing how
+  // much it advanced against how large the wall-clock gap was tells us whether
+  // the Arduino itself was still running (PC/logger-side interruption) or also
+  // stalled (firmware-side freeze) — see generate_study_summaries.py's
+  // find_within_session_gaps() and PATCH_NOTES.md in
+  // user_provided/arduino/libraries/DFRobot_AS7341/ for the full story.
+  const diagnoseGap = g => {
+    if (g.type === 'between_sessions') {
+      return 'Separate CSV files — logger restarted (new session)';
+    }
+    const d = g.arduino_uptime_delta_s;
+    if (d === null || d === undefined) {
+      return 'Within one session file — cause unknown (uptime_s not available for this schema)';
+    }
+    const gapS = g.gap_s;
+    const ratio = d / gapS;
+    // ratio << 1: Arduino ticked on normally, PC just wasn't capturing (e.g. sleep).
+    // ratio ~= 1: Arduino's own clock advanced in step with the gap — its firmware
+    //             itself was blocked (e.g. an unbounded I2C wait — see PATCH_NOTES.md).
+    // ratio >> 1: Arduino advanced MORE than the observed wall-clock gap between
+    //             these two logged rows — the two rows aren't adjacent in the live
+    //             stream the way they look; most likely many lines arrived in
+    //             between but were silently rejected by the logger's own
+    //             line-validation (wrong field count / parse error) rather than
+    //             never being sent at all. This is a different failure than either
+    //             of the other two: something upstream of this table (the CSV
+    //             already excludes rejected lines) would need the logger's console
+    //             output to confirm, which wasn't captured/saved for this session.
+    if (ratio > 1.5) {
+      return `Arduino uptime advanced MORE than the wall-clock gap (${d.toFixed(0)}s of Arduino time vs a ${gapS.toLocaleString()}s PC-side gap) — likely lines kept arriving but were silently rejected by the logger's line validation, not a clean stop in transmission`;
+    }
+    if (d < gapS * 0.2) {
+      return `Host PC / logger stalled — Arduino kept running (uptime advanced only ${d.toFixed(0)}s vs a ${gapS.toLocaleString()}s gap)`;
+    }
+    if (ratio > 0.7) {
+      return `Arduino firmware itself froze (uptime advanced ${d.toFixed(0)}s, tracking the gap almost exactly)`;
+    }
+    return `Ambiguous — Arduino uptime advanced ${d.toFixed(0)}s of a ${gapS.toLocaleString()}s gap`;
+  };
+
+  const gapsData = (t.gaps || []).map(g => ({
+    type:   g.type === 'within_session' ? 'Within session' : 'Between sessions',
+    files:  g.type === 'within_session' ? g.file : `${g.after_file} -> ${g.before_file}`,
+    start:  g.gap_start,
+    end:    g.gap_end,
+    hours:  g.gap_hours,
+    cause:  diagnoseGap(g),
+  }));
+
+  const gapsTbl = new Tabulator(`#table-gaps-${name}`, {
+    data: gapsData,
+    layout: 'fitColumns',
+    headerSort: true,
+    initialSort: [{ column: 'start', dir: 'asc' }],
+    placeholder: 'No gaps above the reporting threshold — logging was continuous.',
+    columns: [
+      { title: 'Type',       field: 'type',  headerSort: true, width: 130 },
+      { title: 'File(s)',    field: 'files', headerSort: false, widthGrow: 2 },
+      { title: 'Start',      field: 'start', headerSort: true, width: 150 },
+      { title: 'End',        field: 'end',   headerSort: true, width: 150 },
+      { title: 'Duration',   field: 'hours', headerSort: true, sorter: 'number', hozAlign: 'right', width: 90,
+        formatter: cell => `${cell.getValue()} h` },
+      { title: 'Likely Cause', field: 'cause', headerSort: false, widthGrow: 3 },
+    ],
+  });
+
+  document.getElementById(`dl-gaps-${name}`).addEventListener('click', () => {
+    gapsTbl.download('csv', `${name}_logging_gaps.csv`);
+  });
+
+  setCaption(`cap-gaps-${name}`, nextTableLabel(),
+    'Logging interruptions above 60s (or 5s between separate session files). "Within session" ' +
+    'gaps happen inside a single CSV file that never closed — the file boundary alone can\'t ' +
+    'reveal these, so each is diagnosed by comparing the Arduino\'s own independent uptime clock ' +
+    'against the wall-clock gap: a small uptime advance means the Arduino kept running fine and ' +
+    'the interruption was on the host PC / logger side (e.g. the PC sleeping); an uptime advance ' +
+    'close to the gap size means the Arduino\'s own firmware froze.');
 
   // ── Tabulator variable stats ───────────────────────────────────────────────
   const tblData = Object.entries(vars).map(([col, v]) => ({
@@ -618,9 +705,9 @@ function studyGroupNotes(studyName, groupKey) {
     // ── Light spectrum time-series chart ──────────────────────────────────
     light: [
       '<b>AS7341 Spectral Sensor:</b> CMOS-based 11-channel spectral sensor (AMS-OSRAM AS7341). Narrowband optical interference filters are deposited directly on-chip above individual silicon photodiodes to isolate specific wavelength bands (~30–40 nm FWHM each). Each photodiode converts photons to charge accumulated in a 16-bit ADC (0–65535 counts; 65535 = saturated). Full channel set: F1 (415 nm, violet), F2 (445 nm, indigo), F3 (480 nm, blue), F4 (515 nm, cyan-green), F5 (555 nm, green), F6 (590 nm, amber), F7 (630 nm, orange-red), F8 (680 nm, red), CLEAR (broadband 380–700 nm), NIR (~855 nm). ' + as7341Ref,
-      '<b>Only 6 of 10 channels logged (Study 001):</b> The physical AS7341 die exposes at most 6 ADC channels per measurement cycle, so DFRobot\'s library splits access into two modes — Mode 1 (F1–F4 + CLEAR + NIR) and Mode 2 (F5–F8 + CLEAR + NIR). This study\'s firmware calls <code>startMeasure(DFRobot_AS7341::eF1F4ClearNIR)</code> and <code>readSpectralDataOne()</code> only — Mode 2 is never invoked. <b>F5–F8 were never measured for Study 001</b>; every chart, table, and CSV export on this page reflects only F1–F4, CLEAR, and NIR. This is a firmware limitation, not a data-processing or logging error — see the <a href="index.html#hardware">About page — Hardware</a> section for the corrected sensor description.',
-      '<b>Output scale — 0 to 1000, not raw 16-bit:</b> The DFRobot_AS7341 library used in this firmware outputs normalized channel values on a <b>0–1000 scale</b>, not raw 16-bit ADC counts (0–65535). A reading of exactly 1000 means the channel is at the library\'s full-scale ceiling — the internal ADC has saturated for the current gain and integration time settings. The pipeline\'s saturation filter flags values ≥ 1000 as <code>above_max</code>.',
-      '<b>Placement as a colonization proxy:</b> The sensor sits under the bag, beneath a light source strong enough to saturate every channel (1000 counts) if the bag were not attenuating it. As the fungus colonizes the substrate and the bag interior fills with white mycelium, transmitted light reaching the sensor is expected to fall — a lower, falling reading is the hypothesized colonization signal. This is a hypothesis to be checked against periodic photos of the bag, not an established result.',
+      '<b>6 of 10 channels logged before 2026-07-08, all 10 after:</b> The physical AS7341 die exposes at most 6 ADC channels per measurement cycle, so DFRobot\'s library splits access into two modes — Mode 1 (F1–F4 + CLEAR + NIR) and Mode 2 (F5–F8 + CLEAR + NIR). Study 001\'s firmware originally called only <code>startMeasure(DFRobot_AS7341::eF1F4ClearNIR)</code> / <code>readSpectralDataOne()</code> — Mode 2 was never invoked, so F5–F8 were never measured. As of 2026-07-08 the firmware runs both modes every logging cycle, capturing all 8 filtered channels + CLEAR + NIR. <b>CSVs recorded before 2026-07-08 (Study 001\'s first 9 sessions) only have F1–F4, CLEAR, and NIR</b> — F5–F8 are simply absent from those rows, not zero or bad; charts and stats for as7341_f5..f8 only reflect sessions logged after the update. This was a firmware limitation, not a data-processing or logging error — see the <a href="index.html#hardware">About page — Hardware</a> section for the corrected sensor description.',
+      '<b>Output scale — raw 16-bit ADC counts (0–65535), not 0–1000:</b> readSpectralDataOne()/readSpectralDataTwo() in the DFRobot_AS7341 library return the raw, unmodified 16-bit ADC register value for each channel — confirmed directly against the library source (<code>DFRobot_AS7341.cpp</code>, <code>getChannelData()</code>), which reads two register bytes into a <code>uint16_t</code> with no scaling applied. A reading of 65535 means the channel is fully saturated for the current gain/integration-time settings. An earlier version of this page and the data pipeline incorrectly assumed the library normalizes output to a 0–1000 scale — that assumption was based on an empirical observation specific to Study 001\'s light source and default gain/integration-time settings (which happened to keep raw counts under ~1000), not actual library behavior, and would have silently discarded valid readings from any brighter session or different gain setting. The pipeline\'s saturation filter now flags values ≥ 65535 as <code>above_max</code>.',
+      '<b>Placement as a colonization proxy:</b> The sensor sits under the bag, beneath a light source strong enough to noticeably saturate the sensor\'s channels if the bag were not attenuating it (empirically, close to full-scale for this study\'s specific gain/integration-time settings — see the output-scale note above for why that observation does not generalize to a fixed "1000" ceiling). As the fungus colonizes the substrate and the bag interior fills with white mycelium, transmitted light reaching the sensor is expected to fall — a lower, falling reading is the hypothesized colonization signal. This is a hypothesis to be checked against periodic photos of the bag, not an established result.',
       '<b>Ambient light contamination:</b> Without a fully controlled illumination setup, any change in the external light source (lamp switching, dimming, repositioning) will change every channel and can be mistaken for a colonization signal. Keeping the illumination geometry and intensity fixed across the study is important for the light channel to be interpretable as a colonization proxy rather than a room-lighting log.',
     ],
   };
@@ -958,7 +1045,8 @@ function renderStudyWeather(name, block) {
     'Sensor pressures (BME688 MEMS, absolute, ±0.6 hPa) should agree closely with ERA5 surface pressure ' +
     'if both are at similar elevations above sea level.',
 
-    '<b>Temporal resolution:</b> ERA5 data is hourly; substrate sensor data is logged every 3 seconds and ' +
+    '<b>Temporal resolution:</b> ERA5 data is hourly; substrate sensor data is logged every 3-5 seconds ' +
+    '(3s before 2026-07-08, 5s after) and ' +
     'downsampled to ~4 000 points per study for display. ERA5 temperature will appear smooth relative to ' +
     'sensor data, which captures short-duration HVAC cycling, door-opening transients, and sensor start-up ' +
     'artefacts not visible in the 1-hour weather record.',
